@@ -10,6 +10,33 @@ Contributors:
 
 --- 
 
+## 2026-02-28 — Start Page & Cross-Instance Fixes
+
+### Fixed
+- **Duplicate tab when clicking recent file from Start Page**: Clicking a file from the
+  Start Page recent files list was opening a second tab instead of switching to the
+  already-open tab. Root cause: `postMessage` serialises JS objects to JSON, escaping
+  backslashes (`C:\path` → `C:\\path`). `ExtractNestedJsonValue` was returning the raw
+  escaped string, so the path never matched the single-backslash path stored in
+  `_openTabs`. Added `UnescapeJsonString` helper used by both `ExtractJsonValue` and
+  `ExtractNestedJsonValue`.
+- **Cross-instance duplicate dialog not shown from Start Page**: The same JSON unescape
+  bug caused the `_allInstances` guard in `OpenFile` to also miss — the escaped path
+  never matched `HasFileOpen`, so the "file already open in another instance" dialog was
+  silently skipped for all Start Page recent file clicks (both pad and document modes).
+  Fixed by the same `UnescapeJsonString` change.
+- **View → Markdown Editor Window creates duplicate window**: Choosing the menu item when
+  a Markdown Editor document tab was already open created an additional empty instance.
+  Now checks `ViewContentCollection` first and calls `SelectWindow()` on the existing
+  instance if found.
+
+### Added
+- **ODS logging via `OutputDebugString`**: A `Log()` helper using P/Invoke
+  `OutputDebugString` and a `debugLog` JS→C# message type allow real-time tracing in
+  DebugView++ (filter `[MarkdownEditor]`), active in both Debug and Release builds.
+
+---
+
 ## 2026-02-28 — Single Editor Instance & Dark Mode Sync
 
 ### Added

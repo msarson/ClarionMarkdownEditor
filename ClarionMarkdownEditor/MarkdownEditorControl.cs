@@ -57,8 +57,12 @@ namespace ClarionMarkdownEditor
         // Message filter for closing menus when clicking WebView2
         private WebView2MenuCloseFilter _menuCloseFilter;
 
+        // All live instances (pad + document) — used for cross-instance file collision detection
+        private static readonly List<MarkdownEditorControl> _allInstances = new List<MarkdownEditorControl>();
+
         public MarkdownEditorControl()
         {
+            _allInstances.Add(this);
             InitializeComponent();
             _editorService = new EditorService();
             _settingsService = new SettingsService();
@@ -641,10 +645,43 @@ namespace ClarionMarkdownEditor
             OpenFile(filePath);
         }
 
+        /// <summary>
+        /// Returns true if this control instance already has the given file open as a tab.
+        /// </summary>
+        public bool HasFileOpen(string filePath)
+        {
+            return _openTabs.Values.Any(t =>
+                !string.IsNullOrEmpty(t.FilePath) &&
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// Switches to the tab for the given file and activates this control's parent window.
+        /// </summary>
+        public void SwitchToFileTab(string filePath)
+        {
+            var tab = _openTabs.Values.FirstOrDefault(t =>
+                !string.IsNullOrEmpty(t.FilePath) &&
+                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+            if (tab != null)
+            {
+                SwitchToTab(tab.Id);
+                // Bring parent window to front
+                var form = FindForm();
+                form?.Activate();
+            }
+        }
+
         private void OpenFile(string filePath)
         {
+            Log($"OpenFile called: '{filePath}'");
+            Log($"OpenFile _openTabs count: {_openTabs.Count}");
+            foreach (var t in _openTabs.Values)
+                Log($"  tab '{t.Id}' FilePath='{t.FilePath}'");
+
             if (!File.Exists(filePath))
             {
+                Log($"OpenFile: file not found");
                 MessageBox.Show($"File not found:\n{filePath}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 var files = GetRecentFiles();
@@ -653,19 +690,56 @@ namespace ClarionMarkdownEditor
                 return;
             }
 
-            // Check if file is already open in a tab
+            // Check if file is already open in a tab in this instance
             var existingTab = _openTabs.Values.FirstOrDefault(t =>
                 !string.IsNullOrEmpty(t.FilePath) &&
                 string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
 
+            Log($"OpenFile existingTab: {(existingTab != null ? existingTab.Id : "null")}");
+
             if (existingTab != null)
             {
+                Log($"OpenFile: switching to existing tab {existingTab.Id}");
                 // Switch to existing tab
                 SwitchToTab(existingTab.Id);
                 // Still update recent files to move to top
                 AddToRecentFiles(filePath);
                 _ = RefreshRecentFilesInStartPage();
                 return;
+            }
+
+            // Check if the file is open in a different editor instance (pad or document tab)
+            var otherControl = _allInstances.FirstOrDefault(c => c != this && c.HasFileOpen(filePath));
+            Log($"OpenFile otherControl: {(otherControl != null ? "found" : "null")}, _allInstances.Count={_allInstances.Count}");
+
+            if (otherControl != null)
+            {
+                var result = MessageBox.Show(
+                    $"{Path.GetFileName(filePath)} is already open in another editor instance.\n\n" +
+                    "Yes  — Switch to that instance\n" +
+                    "No   — Open here anyway\n" +
+                    "Cancel — Do nothing",
+                    "File Already Open",
+                    MessageBoxButtons.YesNoCancel,
+                    MessageBoxIcon.Information,
+                    MessageBoxDefaultButton.Button1);
+
+                if (result == DialogResult.Yes)
+                {
+                    otherControl.SwitchToFileTab(filePath);
+                    // Also activate the workbench window if it's a document tab
+                    var docContent = ICSharpCode.SharpDevelop.Gui.WorkbenchSingleton.Workbench
+                        ?.ViewContentCollection
+                        .OfType<MarkdownEditorViewContent>()
+                        .FirstOrDefault(vc => vc.Control == otherControl);
+                    docContent?.WorkbenchWindow?.SelectWindow();
+                    return;
+                }
+                else if (result == DialogResult.Cancel)
+                {
+                    return;
+                }
+                // No = fall through and open in this instance
             }
 
             // Create a new tab for this file
@@ -752,7 +826,7 @@ namespace ClarionMarkdownEditor
             }
         }
 
-        private void SaveMarkdownFile()
+        private async void SaveMarkdownFile()
         {
             if (string.IsNullOrEmpty(_activeTabId) || !_openTabs.TryGetValue(_activeTabId, out var activeTab))
             {
@@ -765,7 +839,7 @@ namespace ClarionMarkdownEditor
                 return;
             }
 
-            string content = GetEditorContent();
+            string content = await GetEditorContentAsync();
             if (content != null)
             {
                 File.WriteAllText(activeTab.FilePath, content);
@@ -1124,7 +1198,15 @@ namespace ClarionMarkdownEditor
                         break;
 
                     case "saveRequested":
-                        BeginInvoke(new Action(SaveMarkdownFile));
+                        SaveMarkdownFile();
+                        break;
+
+                    case "darkModeChanged":
+                        {
+                            var isDarkStr = ExtractJsonValue(message, "isDark");
+                            _isDarkMode = isDarkStr?.ToLower() == "true";
+                            _settingsService.Set("DarkMode", _isDarkMode ? "true" : "false");
+                        }
                         break;
 
                     case "tabDirtyChanged":
@@ -1166,9 +1248,13 @@ namespace ClarionMarkdownEditor
 
                                 case "openRecentFile":
                                     var filePath = ExtractNestedJsonValue(message, "data", "filePath");
+                                    Log($"openRecentFile raw extracted: '{filePath}'");
                                     if (!string.IsNullOrEmpty(filePath))
                                     {
-                                        OpenFile(filePath);
+                                        // Defer out of WebView2 callback so cross-instance guard
+                                        // (MessageBox.Show) works the same as from a menu click
+                                        var fp = filePath;
+                                        BeginInvoke(new Action(() => OpenFile(fp)));
                                     }
                                     break;
 
@@ -1186,12 +1272,39 @@ namespace ClarionMarkdownEditor
                             }
                         }
                         break;
+
+                    case "debugLog":
+                        {
+                            var logMsg = ExtractJsonValue(message, "message");
+                            Log($"[JS] {logMsg}");
+                        }
+                        break;
                 }
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"HandleWebMessage error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"[MarkdownEditor] HandleWebMessage error: {ex.Message}\n{ex.StackTrace}");
+                Log($"HandleWebMessage error: {ex.Message} | {ex.StackTrace}");
             }
+        }
+
+        [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        private static extern void OutputDebugString(string lpOutputString);
+
+        private static void Log(string message)
+        {
+            OutputDebugString($"[MarkdownEditor] {message}");
+        }
+
+        private static string UnescapeJsonString(string value)
+        {
+            return value
+                .Replace("\\\\", "\\")
+                .Replace("\\\"", "\"")
+                .Replace("\\/", "/")
+                .Replace("\\n", "\n")
+                .Replace("\\r", "\r")
+                .Replace("\\t", "\t");
         }
 
         /// <summary>
@@ -1199,10 +1312,9 @@ namespace ClarionMarkdownEditor
         /// </summary>
         private string ExtractJsonValue(string json, string key)
         {
-            // Simple pattern: "key":"value" or "key": "value"
             var pattern = $"\"{key}\"\\s*:\\s*\"([^\"]+)\"";
             var match = System.Text.RegularExpressions.Regex.Match(json, pattern);
-            return match.Success ? match.Groups[1].Value : null;
+            return match.Success ? UnescapeJsonString(match.Groups[1].Value) : null;
         }
 
         /// <summary>
@@ -1210,7 +1322,7 @@ namespace ClarionMarkdownEditor
         /// </summary>
         private string ExtractNestedJsonValue(string json, string parentKey, string childKey)
         {
-            // Find the "data" object first
+            // Find the parent object first
             var dataPattern = $"\"{parentKey}\"\\s*:\\s*\\{{([^}}]+)\\}}";
             var dataMatch = System.Text.RegularExpressions.Regex.Match(json, dataPattern);
             if (!dataMatch.Success) return null;
@@ -1220,7 +1332,7 @@ namespace ClarionMarkdownEditor
             // Look for string value
             var pattern = $"\"{childKey}\"\\s*:\\s*\"([^\"]+)\"";
             var match = System.Text.RegularExpressions.Regex.Match(dataContent, pattern);
-            if (match.Success) return match.Groups[1].Value;
+            if (match.Success) return UnescapeJsonString(match.Groups[1].Value);
 
             // Look for boolean/number value (no quotes)
             pattern = $"\"{childKey}\"\\s*:\\s*([^,}}\\s]+)";

@@ -188,6 +188,7 @@
             // Create tab data
             tabs[tabId] = {
                 content: content || '',
+                cleanContent: content || '',
                 isDirty: false,
                 filePath: filePath || '',
                 fileName: fileName || 'Untitled'
@@ -320,6 +321,11 @@
 
         // Alias for C# compatibility
         function setTabDirty(tabId, dirty) {
+            if (!dirty && tabs[tabId]) {
+                // Clearing dirty after save — update the clean baseline
+                var savedContent = (tabId === activeTabId) ? editor.value : tabs[tabId].content;
+                tabs[tabId].cleanContent = savedContent;
+            }
             updateTabDirty(tabId, dirty);
         }
 
@@ -716,7 +722,15 @@
             }
         }
 
+        function dbg(message) {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ type: 'debugLog', message: String(message) });
+            }
+            console.log('[MarkdownEditor] ' + message);
+        }
+
         function startPageOpenRecentFile(filePath) {
+            dbg('startPageOpenRecentFile called: ' + filePath);
             if (window.chrome && window.chrome.webview) {
                 window.chrome.webview.postMessage({
                     type: 'startPageAction',
@@ -766,18 +780,25 @@
             updateTimeout = setTimeout(function() {
                 updatePreview();
                 // Mark dirty only on actual user edits (not tab switches or loads)
-                isDirty = true;
                 if (activeTabId && tabs[activeTabId]) {
-                    tabs[activeTabId].isDirty = true;
+                    var currentContent = editor.value;
+                    var nowDirty = currentContent !== tabs[activeTabId].cleanContent;
+                    var wasDirty = tabs[activeTabId].isDirty;
+                    isDirty = nowDirty;
+                    tabs[activeTabId].isDirty = nowDirty;
                     var tabEl = tabBar.querySelector('[data-tab-id="' + activeTabId + '"]');
                     if (tabEl) {
                         var dirtyIndicator = tabEl.querySelector('.tab-dirty');
                         if (dirtyIndicator) {
-                            dirtyIndicator.style.display = 'inline';
+                            dirtyIndicator.style.display = nowDirty ? 'inline' : 'none';
                         }
                     }
-                    if (window.chrome && window.chrome.webview) {
-                        window.chrome.webview.postMessage({ type: 'contentChanged', tabId: activeTabId });
+                    // Only notify C# when dirty state changes to avoid spurious IsDirty=true
+                    if (nowDirty !== wasDirty && window.chrome && window.chrome.webview) {
+                        window.chrome.webview.postMessage({
+                            type: 'tabDirtyChanged',
+                            data: { tabId: activeTabId, isDirty: nowDirty }
+                        });
                     }
                 }
             }, DEBOUNCE_MS);
@@ -929,9 +950,9 @@
                 btn.textContent = isDark ? '☀️ Light Mode' : '🌓 Dark Mode';
             }
 
-            // Notify C# (though we're now handling it in JS)
-            if (window.external && window.external.SetDarkMode) {
-                window.external.SetDarkMode(isDark);
+            // Notify C# so _isDarkMode and View menu stay in sync
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ type: 'darkModeChanged', isDark: isDark });
             }
         }
         
@@ -1042,24 +1063,22 @@
         function wrapSelection(before, after) {
             var start = editor.selectionStart;
             var end = editor.selectionEnd;
-            var text = editor.value;
-            var sel = text.substring(start, end) || 'text';
-            editor.value = text.substring(0, start) + before + sel + after + text.substring(end);
-            editor.selectionStart = start + before.length;
-            editor.selectionEnd = start + before.length + sel.length;
+            var sel = editor.value.substring(start, end) || 'text';
             editor.focus();
-            updatePreview();
+            editor.setSelectionRange(start, end);
+            document.execCommand('insertText', false, before + sel + after);
+            // Restore selection to just the inner text
+            editor.setSelectionRange(start + before.length, start + before.length + sel.length);
         }
 
         function insertAtLineStart(prefix) {
             var start = editor.selectionStart;
             var text = editor.value;
-            // Find line start
             var lineStart = text.lastIndexOf('\n', start - 1) + 1;
-            editor.value = text.substring(0, lineStart) + prefix + text.substring(lineStart);
-            editor.selectionStart = editor.selectionEnd = start + prefix.length;
             editor.focus();
-            updatePreview();
+            editor.setSelectionRange(lineStart, lineStart);
+            document.execCommand('insertText', false, prefix);
+            editor.setSelectionRange(start + prefix.length, start + prefix.length);
         }
 
         function getSelection() {
@@ -1069,11 +1088,9 @@
         function insertText(text) {
             var start = editor.selectionStart;
             var end = editor.selectionEnd;
-            var val = editor.value;
-            editor.value = val.substring(0, start) + text + val.substring(end);
-            editor.selectionStart = editor.selectionEnd = start + text.length;
             editor.focus();
-            updatePreview();
+            editor.setSelectionRange(start, end);
+            document.execCommand('insertText', false, text);
         }
 
         // Keyboard shortcuts

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ICSharpCode.Core;
 using ICSharpCode.SharpDevelop.Gui;
 
@@ -15,32 +16,40 @@ namespace ClarionMarkdownEditor
             try
             {
                 var workbench = WorkbenchSingleton.Workbench;
-                if (workbench != null)
+                if (workbench == null) return;
+
+                // If an instance already exists, switch to it instead of creating a new one
+                var existing = workbench.ViewContentCollection
+                    .OfType<MarkdownEditorViewContent>()
+                    .FirstOrDefault();
+
+                if (existing != null)
                 {
-                    // Create a new ViewContent and show it in the main document area
-                    var viewContent = new MarkdownEditorViewContent();
-                    
-                    // Use reflection to call ShowView method
-                    var showViewMethod = workbench.GetType().GetMethod("ShowView", 
-                        new Type[] { typeof(IViewContent) });
-                    
-                    if (showViewMethod != null)
+                    existing.WorkbenchWindow?.SelectWindow();
+                    return;
+                }
+
+                // No existing instance — create one and show it
+                var viewContent = new MarkdownEditorViewContent();
+                
+                var showViewMethod = workbench.GetType().GetMethod("ShowView", 
+                    new Type[] { typeof(IViewContent) });
+                
+                if (showViewMethod != null)
+                {
+                    showViewMethod.Invoke(workbench, new object[] { viewContent });
+                }
+                else
+                {
+                    var viewContentsProp = workbench.GetType().GetProperty("ViewContentCollection");
+                    if (viewContentsProp != null)
                     {
-                        showViewMethod.Invoke(workbench, new object[] { viewContent });
-                    }
-                    else
-                    {
-                        // Try alternative approach: add to ViewContentCollection
-                        var viewContentsProp = workbench.GetType().GetProperty("ViewContentCollection");
-                        if (viewContentsProp != null)
+                        var collection = viewContentsProp.GetValue(workbench, null);
+                        if (collection != null)
                         {
-                            var collection = viewContentsProp.GetValue(workbench, null);
-                            if (collection != null)
-                            {
-                                var addMethod = collection.GetType().GetMethod("Add", 
-                                    new Type[] { typeof(IViewContent) });
-                                addMethod?.Invoke(collection, new object[] { viewContent });
-                            }
+                            var addMethod = collection.GetType().GetMethod("Add", 
+                                new Type[] { typeof(IViewContent) });
+                            addMethod?.Invoke(collection, new object[] { viewContent });
                         }
                     }
                 }

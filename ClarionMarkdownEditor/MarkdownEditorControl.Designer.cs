@@ -21,6 +21,8 @@ namespace ClarionMarkdownEditor
         {
             if (disposing)
             {
+                _allInstances.Remove(this);
+
                 // Remove message filter
                 if (_menuCloseFilter != null)
                 {

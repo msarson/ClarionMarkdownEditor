@@ -93,7 +93,7 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
 1. Download the latest release
 2. Copy all files to:
    ```
-   {CLARION_PATH}\accessory\addins\MarkdownEditor\
+   {CLARION_PATH}\\accessory\\addins\\MarkdownEditor\\
    ```
    Required files:
    - `ClarionMarkdownEditor.dll`
@@ -101,11 +101,11 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
    - `Microsoft.Web.WebView2.Core.dll`
    - `Microsoft.Web.WebView2.WinForms.dll`
    - `WebView2Loader.dll`
-   - `Resources\markdown-editor.html`
-   - `Resources\markdown-editor.css`
-   - `Resources\markdown-editor.js`
-   - `Resources\highlight.min.js`
-   - `Resources\atom-one-dark.min.css`
+   - `Resources\\markdown-editor.html`
+   - `Resources\\markdown-editor.css`
+   - `Resources\\markdown-editor.js`
+   - `Resources\\highlight.min.js`
+   - `Resources\\atom-one-dark.min.css`
 3. Ensure WebView2 Runtime is installed
 4. Restart Clarion IDE
 
@@ -120,41 +120,42 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
 2. **Configure your Clarion path**
 
    The project uses `Directory.Build.props` to locate your Clarion installation.
-   The default path is `C:\Clarion12\bin`.
+   The default path is `C:\\Clarion12\\bin`.
 
    **If your Clarion is installed elsewhere**, create a file called
-   `ClarionMarkdownEditor\Directory.Build.props.user` (gitignored) with:
+   `ClarionMarkdownEditor\\Directory.Build.props.user` (gitignored) with:
    ```xml
-   <Project>
-     <PropertyGroup>
-       <ClarionBin>C:\Clarion\Clarion11.1\bin</ClarionBin>
-     </PropertyGroup>
-   </Project>
+   \u003CProject>
+     \u003CPropertyGroup>
+       \u003CClarionBin>C:\\Clarion\\Clarion11.1\\bin\u003C/ClarionBin>
+     \u003C/PropertyGroup>
+   \u003C/Project>
    ```
 
    Alternatively, set the `CLARION_BIN` environment variable before building:
    ```powershell
-   $env:CLARION_BIN = "C:\Clarion\Clarion11.1\bin"
+   $env:CLARION_BIN = "C:\\Clarion\\Clarion11.1\\bin"
    ```
 
 3. **Build** — NuGet packages (including WebView2) are restored automatically:
    ```bash
-   dotnet build ClarionMarkdownEditor\ClarionMarkdownEditor.csproj -c Release
+   dotnet build ClarionMarkdownEditor\\ClarionMarkdownEditor.csproj -c Release
    ```
 
 4. **Deploy to Clarion**
 
-   Copy from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\MarkdownEditor\`:
+   Copy from `ClarionMarkdownEditor\\bin\\Release\
+et48\\` to `{CLARION_PATH}\\accessory\\addins\\MarkdownEditor\\`:
    - `ClarionMarkdownEditor.dll`
    - `ClarionMarkdownEditor.addin`
    - `Microsoft.Web.WebView2.Core.dll`
    - `Microsoft.Web.WebView2.WinForms.dll`
    - `WebView2Loader.dll`
-   - `Resources\markdown-editor.html`
-   - `Resources\markdown-editor.css`
-   - `Resources\markdown-editor.js`
-   - `Resources\highlight.min.js`
-   - `Resources\atom-one-dark.min.css`
+   - `Resources\\markdown-editor.html`
+   - `Resources\\markdown-editor.css`
+   - `Resources\\markdown-editor.js`
+   - `Resources\\highlight.min.js`
+   - `Resources\\atom-one-dark.min.css`
 
 5. **Restart Clarion IDE**
 
@@ -163,7 +164,7 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
 ┌─────────────────────────────────────────────────────────────┐
 │ New  Open  Save  Save As │ Insert to IDE │ filename.md     │
 ├─────────────────────────────────────────────────────────────┤
-│ B │ I │ \u003C/> │ {} │ Link │ Img │ H1 │ H2 │ H3 │ List │ ...  │
+│ B │ I │ \\u003C/> │ {} │ Link │ Img │ H1 │ H2 │ H3 │ List │ ...  │
 ├────────────────────────────┬────────────────────────────────┤
 │ MARKDOWN                   │ PREVIEW                [Expand]│
 ├────────────────────────────┼────────────────────────────────┤
@@ -307,7 +308,7 @@ Migrated from old IE-based WebBrowser to WebView2 (Chromium) to enable:
 
 User settings are stored in:
 ```
-%APPDATA%\\ClarionMarkdownEditor\\settings.txt
+%APPDATA%\\\\ClarionMarkdownEditor\\\\settings.txt
 ```
 
 ## Development Notes
