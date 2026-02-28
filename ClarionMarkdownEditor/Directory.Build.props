@@ -8,6 +8,8 @@
            <Project><PropertyGroup><ClarionBin>D:\MyClarion\bin</ClarionBin></PropertyGroup></Project>
       3. Pass on the command line: msbuild /p:ClarionBin=D:\MyClarion\bin
   -->
+  <Import Project="Directory.Build.props.user" Condition="Exists('Directory.Build.props.user')" />
+
   <PropertyGroup>
     <ClarionBin Condition="'$(CLARION_BIN)' != ''">$(CLARION_BIN)</ClarionBin>
     <ClarionBin Condition="'$(ClarionBin)' == ''">C:\Clarion12\bin</ClarionBin>
