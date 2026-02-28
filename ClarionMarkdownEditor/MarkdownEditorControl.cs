@@ -46,6 +46,7 @@ namespace ClarionMarkdownEditor
         private string _tempHtmlPath;
         private bool _isWebView2Ready = false;
         private bool _initializationStarted = false;
+        private string _pendingFilePath = null;
 
         // Tab tracking fields
         private Dictionary<string, FileTab> _openTabs = new Dictionary<string, FileTab>();
@@ -158,14 +159,23 @@ namespace ClarionMarkdownEditor
                     webView.CoreWebView2.Navigate("https://app.local/markdown-editor-temp.html");
                     System.Diagnostics.Debug.WriteLine("Navigated to modified HTML with Highlight.js injected");
 
-                    // Show Start Page after HTML loads
+                    // Show Start Page (or pending file) after HTML loads
                     webView.CoreWebView2.NavigationCompleted += async (s, args) =>
                     {
                         if (args.IsSuccess && _isWebView2Ready)
                         {
                             // Small delay to ensure JavaScript is fully initialized
                             await Task.Delay(100);
-                            ShowStartPage();
+                            if (!string.IsNullOrEmpty(_pendingFilePath))
+                            {
+                                var path = _pendingFilePath;
+                                _pendingFilePath = null;
+                                OpenFile(path);
+                            }
+                            else
+                            {
+                                ShowStartPage();
+                            }
                         }
                     };
                 }
@@ -618,6 +628,11 @@ namespace ClarionMarkdownEditor
 
         public void LoadFile(string filePath)
         {
+            if (!_isWebView2Ready)
+            {
+                _pendingFilePath = filePath;
+                return;
+            }
             OpenFile(filePath);
         }
 
