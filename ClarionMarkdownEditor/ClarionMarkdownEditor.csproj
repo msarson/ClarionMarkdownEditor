@@ -41,4 +41,11 @@
     </Content>
   </ItemGroup>
 
+  <!-- Ensure WebView2Loader.dll lands in the output root for deployment -->
+  <Target Name="CopyWebView2Loader" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)runtimes\win-x86\native\WebView2Loader.dll"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>
