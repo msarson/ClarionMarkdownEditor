@@ -28,7 +28,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
     MESSAGE('Hello from Clarion!')
     RETURN
   ```
-- **Dark Mode**: Toggle between light and dark themes with 🌓/☀️ button
+- **Dark Mode**: Toggle between light and dark themes via **View > Dark Mode** or the 🌓 button on the Start Page — preference is remembered across sessions
 - **Scroll Synchronization**: Bidirectional scroll sync between editor and preview (toggleable)
 - **Horizontal Scrolling**: Long lines scroll instead of wrapping
 - **Expand/Collapse Preview**: Toggle between split view and full-width preview mode
@@ -46,7 +46,8 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - `Ctrl+B` - Bold
   - `Ctrl+I` - Italic
 - **Dockable Pad**: Can be docked anywhere in the Clarion IDE workspace
-- **Remembers Settings**: Last opened folder is saved between sessions
+- **File Type Handler**: Opening a `.md` or `.markdown` file in the IDE automatically opens it in the Markdown Editor
+- **Remembers Settings**: Last opened folder and dark mode preference saved between sessions
 - **Clean UI**: No context menus or distractions
 
 ## Requirements

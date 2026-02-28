@@ -10,6 +10,30 @@ Contributors:
 
 ---
 
+## 2026-02-28 — IDE File Type Integration & UX Fixes
+
+### Added
+- **File type handler**: Opening a `.md` or `.markdown` file in the Clarion IDE now
+  automatically opens it in the Markdown Editor as a document tab, instead of the
+  default text editor. Implemented via `IDisplayBinding` / `DisplayBindingDoozer`.
+- **Dark Mode in View menu**: Dark mode can now be toggled from **View > Dark Mode**
+  at any time, without needing to navigate back to the Start Page. The preference is
+  persisted across sessions via `SettingsService`.
+
+### Fixed
+- Addin assembly load error caused by a double-path in the `.addin` `Import` element
+  (`MarkdownEditor\MarkdownEditor\...`). Assembly path is now simply `ClarionMarkdownEditor.dll`
+  (relative to the `.addin` file location).
+- Display binding was not triggered on file open because the built-in `Text` binding
+  (which matches all files) was registered first. Fixed with `insertbefore="Text"`.
+- File not opened automatically when using the display binding — WebView2 initializes
+  asynchronously, so `LoadFile()` now stores a pending path that is opened once
+  `NavigationCompleted` fires, instead of showing the Start Page.
+- **View > Start Page** checkmark not updating — `ShowStartPage()` now sets
+  `_activeTabId = "startPage"` so the menu reflects the correct active item.
+
+---
+
 ## 2026-02-28
 
 ### Build System
