@@ -8,9 +8,51 @@ Contributors:
 - **Mark Sarson** (msarson) — fork contributor
 - **Oleg Fomin** — PR #3 contributor
 
+--- 
+
+## 2026-02-28 — Editor Polish & Bug Fixes
+
+### Added
+- **Undo support for toolbar actions**: Bold, italic, code, link, table and all other
+  toolbar/keyboard formatting operations now integrate with the browser's native undo
+  stack (Ctrl+Z). Previously, programmatic `editor.value` writes bypassed undo history;
+  now uses `document.execCommand('insertText')` throughout.
+- **Ctrl+S save**: Ctrl+S now saves the current document directly from the editor.
+  Uses fully async save path to prevent UI deadlock.
+
+### Fixed
+- **Dirty indicator not clearing on undo**: The `*` tab dirty indicator now correctly
+  clears when the user undoes all changes back to the last-saved content. Each tab
+  tracks a `cleanContent` baseline (set on load/save) and compares on each change.
+- **Dirty state lock on close**: Previously `contentChanged` was posted to C# on every
+  keystroke (even undos back to clean), causing C# to always mark `IsDirty = true` and
+  block IDE close with a spurious "unsaved changes" prompt. Now uses `tabDirtyChanged`
+  message with actual dirty state, only posted when the state changes.
+- **Ctrl+S deadlock**: `SaveMarkdownFile` used `.GetAwaiter().GetResult()` on the UI
+  thread to retrieve editor content, deadlocking because `ExecuteScriptAsync` needs the
+  UI thread to dispatch its completion. Fixed by making `SaveMarkdownFile` `async void`
+  and using `await GetEditorContentAsync()`.
+- **IDE tab title shows filename**: The Clarion IDE tab hosting the editor now always
+  shows "Markdown Editor" instead of the opened filename. The filename is tracked
+  internally but no longer used as the tab title.
+
 ---
 
-## 2026-02-28 — IDE File Type Integration & UX Fixes
+## 2026-02-28 — Code Refactoring (JS/CSS Extraction)
+
+### Changed
+- Extracted all JavaScript (~1094 lines) from `markdown-editor.html` into a separate
+  `Resources/markdown-editor.js` file, loaded via `<script src>`.
+- Extracted all CSS (~576 lines) from `markdown-editor.html` into a separate
+  `Resources/markdown-editor.css` file, loaded via `<link rel="stylesheet">`.
+- `markdown-editor.html` reduced from ~1800 lines to 133 lines (structure only).
+- Both new files added as `<Content>` items in `.csproj` with `PreserveNewest`, so they
+  are copied to the output folder alongside the HTML and served via the WebView2
+  virtual host (`https://app.local/`).
+
+---
+
+
 
 ### Added
 - **File type handler**: Opening a `.md` or `.markdown` file in the Clarion IDE now
