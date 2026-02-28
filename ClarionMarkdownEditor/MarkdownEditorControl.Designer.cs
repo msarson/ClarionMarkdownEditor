@@ -14,6 +14,8 @@ namespace ClarionMarkdownEditor
         private System.Windows.Forms.ToolStripMenuItem menuAbout;
         private System.Windows.Forms.ToolStripMenuItem menuView;
         private System.Windows.Forms.ToolStripMenuItem menuShowStartPage;
+        private System.Windows.Forms.ToolStripSeparator menuViewSeparator;
+        private System.Windows.Forms.ToolStripMenuItem menuDarkMode;
 
         protected override void Dispose(bool disposing)
         {
@@ -52,6 +54,8 @@ namespace ClarionMarkdownEditor
             this.menuAbout = new System.Windows.Forms.ToolStripMenuItem();
             this.menuView = new System.Windows.Forms.ToolStripMenuItem();
             this.menuShowStartPage = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuViewSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.menuDarkMode = new System.Windows.Forms.ToolStripMenuItem();
             this.webView = new Microsoft.Web.WebView2.WinForms.WebView2();
             ((System.ComponentModel.ISupportInitialize)(this.webView)).BeginInit();
             this.menuStrip.SuspendLayout();
@@ -129,7 +133,9 @@ namespace ClarionMarkdownEditor
             // menuView
             //
             this.menuView.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                this.menuShowStartPage});
+                this.menuShowStartPage,
+                this.menuViewSeparator,
+                this.menuDarkMode});
             this.menuView.Name = "menuView";
             this.menuView.Size = new System.Drawing.Size(44, 20);
             this.menuView.Text = "&View";
@@ -141,6 +147,19 @@ namespace ClarionMarkdownEditor
             this.menuShowStartPage.Size = new System.Drawing.Size(180, 22);
             this.menuShowStartPage.Text = "Start Page";
             this.menuShowStartPage.Click += new System.EventHandler(this.menuShowStartPage_Click);
+            // 
+            // menuViewSeparator
+            // 
+            this.menuViewSeparator.Name = "menuViewSeparator";
+            this.menuViewSeparator.Size = new System.Drawing.Size(177, 6);
+            // 
+            // menuDarkMode
+            // 
+            this.menuDarkMode.Name = "menuDarkMode";
+            this.menuDarkMode.Size = new System.Drawing.Size(180, 22);
+            this.menuDarkMode.Text = "Dark Mode";
+            this.menuDarkMode.CheckOnClick = false;
+            this.menuDarkMode.Click += new System.EventHandler(this.menuDarkMode_Click);
             //
             // webView
             //

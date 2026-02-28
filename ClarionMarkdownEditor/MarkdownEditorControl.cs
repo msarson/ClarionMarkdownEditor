@@ -47,6 +47,7 @@ namespace ClarionMarkdownEditor
         private bool _isWebView2Ready = false;
         private bool _initializationStarted = false;
         private string _pendingFilePath = null;
+        private bool _isDarkMode = false;
 
         // Tab tracking fields
         private Dictionary<string, FileTab> _openTabs = new Dictionary<string, FileTab>();
@@ -166,6 +167,10 @@ namespace ClarionMarkdownEditor
                         {
                             // Small delay to ensure JavaScript is fully initialized
                             await Task.Delay(100);
+                            // Restore dark mode preference
+                            _isDarkMode = _settingsService.Get("DarkMode") == "true";
+                            if (_isDarkMode)
+                                await webView.ExecuteScriptAsync("setDarkMode(true)");
                             if (!string.IsNullOrEmpty(_pendingFilePath))
                             {
                                 var path = _pendingFilePath;
@@ -1564,6 +1569,14 @@ namespace ClarionMarkdownEditor
             ShowStartPage();
         }
 
+        private async void menuDarkMode_Click(object sender, EventArgs e)
+        {
+            _isDarkMode = !_isDarkMode;
+            _settingsService.Set("DarkMode", _isDarkMode ? "true" : "false");
+            if (_isWebView2Ready)
+                await webView.ExecuteScriptAsync(_isDarkMode ? "setDarkMode(true)" : "setDarkMode(false)");
+        }
+
         private void menuAbout_Click(object sender, EventArgs e)
         {
             ShowAboutDialog();
@@ -1582,14 +1595,15 @@ namespace ClarionMarkdownEditor
         /// </summary>
         private void menuView_DropDownOpening(object sender, EventArgs e)
         {
-            // Clear all items except Start Page (first item)
-            while (menuView.DropDownItems.Count > 1)
+            // Clear all dynamic items (keep Start Page, separator, Dark Mode = first 3)
+            while (menuView.DropDownItems.Count > 3)
             {
-                menuView.DropDownItems.RemoveAt(1);
+                menuView.DropDownItems.RemoveAt(3);
             }
 
             // Check Start Page if it's active
             menuShowStartPage.Checked = (_activeTabId == "startPage" || string.IsNullOrEmpty(_activeTabId));
+            menuDarkMode.Checked = _isDarkMode;
 
             // Add separator if there are open tabs
             if (_openTabs.Count > 0)
