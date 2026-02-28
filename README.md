@@ -48,7 +48,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - `Ctrl+I` - Italic
   - All formatting shortcuts support **undo** (Ctrl+Z)
 - **Dockable Pad**: Can be docked anywhere in the Clarion IDE workspace
-- **File Type Handler**: Opening a `.md` or `.markdown` file in the IDE automatically opens it in the Markdown Editor
+- **File Type Handler**: Opening a `.md` or `.markdown` file in the IDE automatically opens it in the Markdown Editor — all files share a single editor instance with internal tabs
 - **Remembers Settings**: Last opened folder and dark mode preference saved between sessions
 - **Dirty Indicator**: The editor tab shows `*` when a document has unsaved changes — clears automatically when changes are undone back to the last-saved state
 

@@ -10,6 +10,23 @@ Contributors:
 
 --- 
 
+## 2026-02-28 — Single Editor Instance & Dark Mode Sync
+
+### Added
+- **Single shared editor instance**: Opening multiple `.md` files from the IDE now
+  routes them all into one Markdown Editor instance as internal tabs, rather than
+  spawning a separate WebView2 process per file. `MarkdownDisplayBinding` finds the
+  existing `MarkdownEditorViewContent` in the workbench and calls `Load()` on it;
+  `OpenFile` handles deduplication (switches to already-open tab) and recent file history.
+
+### Fixed
+- **View menu dark mode checkmark out of sync**: Toggling dark mode from the Start Page
+  button updated the JS UI but never notified C#, so `_isDarkMode` stayed stale and the
+  **View > Dark Mode** tick remained wrong. `toggleDarkMode()` now posts a
+  `darkModeChanged` message; C# handler updates `_isDarkMode` and persists it to settings.
+
+---
+
 ## 2026-02-28 — Editor Polish & Bug Fixes
 
 ### Added
