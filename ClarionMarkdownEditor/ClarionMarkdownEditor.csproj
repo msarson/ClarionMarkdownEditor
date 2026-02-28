@@ -1,45 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{110C04DC-9FF4-44C6-83B3-27628FDA7704}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>ClarionMarkdownEditor</RootNamespace>
     <AssemblyName>ClarionMarkdownEditor</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <RootNamespace>ClarionMarkdownEditor</RootNamespace>
+    <TargetFramework>net48</TargetFramework>
     <PlatformTarget>x86</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <UseWindowsForms>True</UseWindowsForms>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>x86</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Microsoft.Web.WebView2.Core">
-      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.2792.45\lib\net462\Microsoft.Web.WebView2.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Web.WebView2.WinForms">
-      <HintPath>..\packages\Microsoft.Web.WebView2.1.0.2792.45\lib\net462\Microsoft.Web.WebView2.WinForms.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="ICSharpCode.Core">
       <HintPath>$(ClarionBin)\ICSharpCode.Core.dll</HintPath>
       <Private>False</Private>
@@ -49,44 +21,24 @@
       <Private>False</Private>
     </Reference>
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="MarkdownEditorPad.cs" />
-    <Compile Include="MarkdownEditorControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="MarkdownEditorControl.Designer.cs">
-      <DependentUpon>MarkdownEditorControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ShowMarkdownEditorCommand.cs" />
-    <Compile Include="Services\EditorService.cs" />
-    <Compile Include="Services\SettingsService.cs" />
-    <Compile Include="Services\ScriptBridge.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MarkdownEditorViewContent.cs" />
-    <Compile Include="ShowMarkdownEditorWindowCommand.cs" />
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2792.45" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Include="ClarionMarkdownEditor.addin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\highlight.min.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Resources\highlight.min.js</Link>
     </Content>
     <Content Include="Resources\atom-one-dark.min.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Resources\atom-one-dark.min.css</Link>
     </Content>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="Resources\markdown-editor.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>Resources\markdown-editor.html</Link>
     </Content>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- Copy WebView2Loader.dll to output directory -->
-  <Target Name="CopyWebView2Loader" AfterTargets="Build">
-    <Copy SourceFiles="..\packages\Microsoft.Web.WebView2.1.0.2792.45\runtimes\win-x86\native\WebView2Loader.dll" DestinationFolder="$(OutputPath)" />
-  </Target>
+
 </Project>
