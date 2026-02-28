@@ -7,6 +7,7 @@
   </Runtime>
   <Path name="/SharpDevelop/Workbench/DisplayBindings">
     <DisplayBinding id="MarkdownDisplayBinding"
+                    insertbefore="Text"
                     class="ClarionMarkdownEditor.MarkdownDisplayBinding"
                     fileNamePattern=".*\.(md|markdown)$"
                     type="Primary"/>
