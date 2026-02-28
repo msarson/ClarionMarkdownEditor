@@ -63,8 +63,25 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 
 > **Note:** Visual Studio is _not_ required. The .NET SDK is a free, lightweight
 > command-line toolchain. Download the latest version from
-> https://dotnet.microsoft.com/download and run the installer — `dotnet build`  
+> https://dotnet.microsoft.com/download and run the installer — `dotnet build`
 > will then be available in any terminal.
+
+### Recommended IDEs
+
+You can open ClarionMarkdownEditor.slnx in any of the following:
+
+- **[Visual Studio Code](https://code.visualstudio.com/)** (free, lightweight)
+  Recommended extensions:
+  - [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) — IntelliSense, build, debug
+  - [C#](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) — language support (installed with C# Dev Kit)
+  - [NuGet Gallery](https://marketplace.visualstudio.com/items?itemName=patcx.vscode-nuget-gallery) — browse and manage NuGet packages
+  - [XML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml) — syntax support for .addin and .props files
+
+- **[Visual Studio Community](https://visualstudio.microsoft.com/vs/community/)** (free for open source)
+  Open the .slnx file directly — all packages restore automatically on first build.
+
+- **[JetBrains Rider](https://www.jetbrains.com/rider/)** (commercial, free for open source)
+  Full .NET IDE with excellent SDK-style project support.
 
 ## Installation
 
@@ -181,8 +198,25 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 
 > **Note:** Visual Studio is _not_ required. The .NET SDK is a free, lightweight
 > command-line toolchain. Download the latest version from
-> https://dotnet.microsoft.com/download and run the installer — `dotnet build`  
+> https://dotnet.microsoft.com/download and run the installer — `dotnet build`
 > will then be available in any terminal.
+
+### Recommended IDEs
+
+You can open ClarionMarkdownEditor.slnx in any of the following:
+
+- **[Visual Studio Code](https://code.visualstudio.com/)** (free, lightweight)
+  Recommended extensions:
+  - [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) — IntelliSense, build, debug
+  - [C#](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csharp) — language support (installed with C# Dev Kit)
+  - [NuGet Gallery](https://marketplace.visualstudio.com/items?itemName=patcx.vscode-nuget-gallery) — browse and manage NuGet packages
+  - [XML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml) — syntax support for .addin and .props files
+
+- **[Visual Studio Community](https://visualstudio.microsoft.com/vs/community/)** (free for open source)
+  Open the .slnx file directly — all packages restore automatically on first build.
+
+- **[JetBrains Rider](https://www.jetbrains.com/rider/)** (commercial, free for open source)
+  Full .NET IDE with excellent SDK-style project support.
 
 ## Installation
 
