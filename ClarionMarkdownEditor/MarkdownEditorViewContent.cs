@@ -79,7 +79,8 @@ namespace ClarionMarkdownEditor
         {
             _fileName = fileName;
             TitleName = Path.GetFileName(fileName);
-            // The control handles file loading through its own mechanisms
+            if (_control != null && File.Exists(fileName))
+                _control.LoadFile(fileName);
             OnFileNameChanged(EventArgs.Empty);
         }
 

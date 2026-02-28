@@ -5,6 +5,12 @@
   <Runtime>
     <Import assembly="MarkdownEditor\ClarionMarkdownEditor.dll"/>
   </Runtime>
+  <Path name="/SharpDevelop/Workbench/DisplayBindings">
+    <DisplayBinding id="MarkdownDisplayBinding"
+                    class="ClarionMarkdownEditor.MarkdownDisplayBinding"
+                    fileNamePattern=".*\.(md|markdown)$"
+                    type="Primary"/>
+  </Path>
   <Path name="/SharpDevelop/Workbench/Pads">
     <Pad id="MarkdownEditor" category="Tools" title="Markdown Editor (Pad)"
          icon="PadIcons.ClassBrowser" shortcut="Control|Alt|M"

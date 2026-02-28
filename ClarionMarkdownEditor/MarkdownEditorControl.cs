@@ -616,6 +616,11 @@ namespace ClarionMarkdownEditor
             SaveRecentFiles(files);
         }
 
+        public void LoadFile(string filePath)
+        {
+            OpenFile(filePath);
+        }
+
         private void OpenFile(string filePath)
         {
             if (!File.Exists(filePath))
