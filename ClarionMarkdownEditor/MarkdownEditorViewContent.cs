@@ -135,20 +135,14 @@ namespace ClarionMarkdownEditor
             _control?.RefreshContent();
         }
 
-        /// <summary>
-        /// Event raised when dirty state changes.
-        /// </summary>
-        protected virtual void OnDirtyChanged(EventArgs e)
+        protected override void OnDirtyChanged(EventArgs e)
         {
-            // Notify the workbench that dirty state has changed
+            base.OnDirtyChanged(e);
         }
 
-        /// <summary>
-        /// Event raised when file name changes.
-        /// </summary>
-        protected virtual void OnFileNameChanged(EventArgs e)
+        protected override void OnFileNameChanged(EventArgs e)
         {
-            // Notify the workbench that file name has changed
+            base.OnFileNameChanged(e);
         }
     }
 }

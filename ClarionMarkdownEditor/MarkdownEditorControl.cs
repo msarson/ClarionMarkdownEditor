@@ -59,10 +59,28 @@ namespace ClarionMarkdownEditor
 
         // All live instances (pad + document) — used for cross-instance file collision detection
         private static readonly List<MarkdownEditorControl> _allInstances = new List<MarkdownEditorControl>();
+        private static readonly object _allInstancesLock = new object();
+
+        partial void OnCustomDispose()
+        {
+            lock (_allInstancesLock) _allInstances.Remove(this);
+
+            if (_menuCloseFilter != null)
+            {
+                Application.RemoveMessageFilter(_menuCloseFilter);
+                _menuCloseFilter = null;
+            }
+
+            if (!string.IsNullOrEmpty(_tempHtmlPath) && File.Exists(_tempHtmlPath))
+            {
+                try { File.Delete(_tempHtmlPath); }
+                catch { /* ignore cleanup errors */ }
+            }
+        }
 
         public MarkdownEditorControl()
         {
-            _allInstances.Add(this);
+            lock (_allInstancesLock) _allInstances.Add(this);
             InitializeComponent();
             _editorService = new EditorService();
             _settingsService = new SettingsService();
@@ -709,7 +727,9 @@ namespace ClarionMarkdownEditor
             }
 
             // Check if the file is open in a different editor instance (pad or document tab)
-            var otherControl = _allInstances.FirstOrDefault(c => c != this && c.HasFileOpen(filePath));
+            MarkdownEditorControl otherControl;
+            lock (_allInstancesLock)
+                otherControl = _allInstances.FirstOrDefault(c => c != this && c.HasFileOpen(filePath));
             Log($"OpenFile otherControl: {(otherControl != null ? "found" : "null")}, _allInstances.Count={_allInstances.Count}");
 
             if (otherControl != null)
@@ -850,7 +870,7 @@ namespace ClarionMarkdownEditor
             }
         }
 
-        private void SaveMarkdownFileAs()
+        private async void SaveMarkdownFileAs()
         {
             if (string.IsNullOrEmpty(_activeTabId) || !_openTabs.TryGetValue(_activeTabId, out var activeTab))
             {
@@ -875,7 +895,7 @@ namespace ClarionMarkdownEditor
 
                 if (dialog.ShowDialog() == DialogResult.OK)
                 {
-                    string content = GetEditorContent();
+                    string content = await GetEditorContentAsync();
                     if (content != null)
                     {
                         File.WriteAllText(dialog.FileName, content);
@@ -1291,6 +1311,7 @@ namespace ClarionMarkdownEditor
         [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
         private static extern void OutputDebugString(string lpOutputString);
 
+        [System.Diagnostics.Conditional("DEBUG")]
         private static void Log(string message)
         {
             OutputDebugString($"[MarkdownEditor] {message}");
@@ -1298,13 +1319,23 @@ namespace ClarionMarkdownEditor
 
         private static string UnescapeJsonString(string value)
         {
-            return value
-                .Replace("\\\\", "\\")
-                .Replace("\\\"", "\"")
-                .Replace("\\/", "/")
-                .Replace("\\n", "\n")
-                .Replace("\\r", "\r")
-                .Replace("\\t", "\t");
+            // Process each JSON escape sequence atomically to avoid double-processing
+            // (e.g. naive string.Replace would turn \\\" into " instead of \")
+            return System.Text.RegularExpressions.Regex.Replace(value, @"\\(.)", m =>
+            {
+                switch (m.Groups[1].Value[0])
+                {
+                    case '\\': return "\\";
+                    case '"':  return "\"";
+                    case '/':  return "/";
+                    case 'n':  return "\n";
+                    case 'r':  return "\r";
+                    case 't':  return "\t";
+                    case 'b':  return "\b";
+                    case 'f':  return "\f";
+                    default:   return m.Value; // preserve unknown escapes
+                }
+            });
         }
 
         /// <summary>
@@ -1699,8 +1730,15 @@ namespace ClarionMarkdownEditor
         {
             _isDarkMode = !_isDarkMode;
             _settingsService.Set("DarkMode", _isDarkMode ? "true" : "false");
-            if (_isWebView2Ready)
-                await webView.ExecuteScriptAsync(_isDarkMode ? "setDarkMode(true)" : "setDarkMode(false)");
+            try
+            {
+                if (_isWebView2Ready)
+                    await webView.ExecuteScriptAsync(_isDarkMode ? "setDarkMode(true)" : "setDarkMode(false)");
+            }
+            catch (Exception ex)
+            {
+                Log($"menuDarkMode_Click error: {ex.Message}");
+            }
         }
 
         private void menuAbout_Click(object sender, EventArgs e)

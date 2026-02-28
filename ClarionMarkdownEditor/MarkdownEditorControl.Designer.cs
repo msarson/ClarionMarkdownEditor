@@ -21,26 +21,13 @@ namespace ClarionMarkdownEditor
         {
             if (disposing)
             {
-                _allInstances.Remove(this);
-
-                // Remove message filter
-                if (_menuCloseFilter != null)
-                {
-                    System.Windows.Forms.Application.RemoveMessageFilter(_menuCloseFilter);
-                    _menuCloseFilter = null;
-                }
-
+                OnCustomDispose();
                 components?.Dispose();
-
-                // Clean up temp HTML file
-                if (!string.IsNullOrEmpty(_tempHtmlPath) && System.IO.File.Exists(_tempHtmlPath))
-                {
-                    try { System.IO.File.Delete(_tempHtmlPath); }
-                    catch { /* Ignore cleanup errors */ }
-                }
             }
             base.Dispose(disposing);
         }
+
+        partial void OnCustomDispose();
 
         #region Component Designer generated code
 
