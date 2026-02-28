@@ -1452,6 +1452,21 @@
             }
             updateTimeout = setTimeout(function() {
                 updatePreview();
+                // Mark dirty only on actual user edits (not tab switches or loads)
+                isDirty = true;
+                if (activeTabId && tabs[activeTabId]) {
+                    tabs[activeTabId].isDirty = true;
+                    var tabEl = tabBar.querySelector('[data-tab-id="' + activeTabId + '"]');
+                    if (tabEl) {
+                        var dirtyIndicator = tabEl.querySelector('.tab-dirty');
+                        if (dirtyIndicator) {
+                            dirtyIndicator.style.display = 'inline';
+                        }
+                    }
+                    if (window.chrome && window.chrome.webview) {
+                        window.chrome.webview.postMessage({ type: 'contentChanged', tabId: activeTabId });
+                    }
+                }
             }, DEBOUNCE_MS);
         }
 
@@ -1537,23 +1552,6 @@
 
             setStatus(statusMsg);
             updateStats();
-            isDirty = true;
-
-            // Update active tab dirty state and notify C#
-            if (activeTabId && tabs[activeTabId]) {
-                tabs[activeTabId].isDirty = true;
-                var tabEl = tabBar.querySelector('[data-tab-id="' + activeTabId + '"]');
-                if (tabEl) {
-                    var dirtyIndicator = tabEl.querySelector('.tab-dirty');
-                    if (dirtyIndicator) {
-                        dirtyIndicator.style.display = 'inline';
-                    }
-                }
-                // Notify C# about content change
-                if (window.chrome && window.chrome.webview) {
-                    window.chrome.webview.postMessage({ type: 'contentChanged', tabId: activeTabId });
-                }
-            }
         }
 
         function updateStats() {
