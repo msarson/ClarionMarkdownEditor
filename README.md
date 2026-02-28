@@ -102,38 +102,25 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
    dotnet restore ClarionMarkdownEditor.sln
    ```
 
-3. **Update Clarion reference paths**
-   
-   Edit `ClarionMarkdownEditor\ClarionMarkdownEditor.csproj` and update `HintPath` to match your Clarion installation:
+3. **Configure your Clarion path**
+
+   The project uses `Directory.Build.props` to locate your Clarion installation.
+   The default path is `C:\Clarion12\bin`.
+
+   **If your Clarion is installed elsewhere**, create a file called
+   `ClarionMarkdownEditor\Directory.Build.props.user` (gitignored) with:
    ```xml
-   <HintPath>C:\Clarion\Clarion11.1\bin\ICSharpCode.Core.dll</HintPath>
-   <HintPath>C:\Clarion\Clarion11.1\bin\ICSharpCode.SharpDevelop.dll</HintPath>
-   ```
-   
-   Change `C:\Clarion\Clarion11.1` to your Clarion path (e.g., `C:\Clarion12`).
-
-4. **Build in Release configuration**
-   ```bash
-   dotnet build ClarionMarkdownEditor.sln -c Release
-   # OR
-   msbuild ClarionMarkdownEditor.sln /p:Configuration=Release
+   <Project>
+     <PropertyGroup>
+       <ClarionBin>C:\Clarion\Clarion11.1\bin</ClarionBin>
+     </PropertyGroup>
+   </Project>
    ```
 
-5. **Deploy to Clarion**
-   
-   Copy from `ClarionMarkdownEditor\bin\Release\` to `{CLARION_PATH}\accessory\addins\MarkdownEditor\`:
-   - `ClarionMarkdownEditor.dll`
-   - `ClarionMarkdownEditor.addin`
-   - `Microsoft.Web.WebView2.Core.dll`
-   - `Microsoft.Web.WebView2.WinForms.dll`
-   - `Microsoft.Web.WebView2.Wpf.dll`
-   - `WebView2Loader.dll`
-   - `Resources\highlight.min.js`
-   - `Resources\atom-one-dark.min.css`
-
-6. **Restart Clarion IDE**
-
-## Screenshots
+   Alternatively, set the `CLARION_BIN` environment variable before building:
+   ```powershell
+   $env:CLARION_BIN = "C:\Clarion\Clarion11.1\bin"
+   ```
 
 ### Split View (Editor + Preview)
 ```
@@ -223,15 +210,25 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
    dotnet restore ClarionMarkdownEditor.sln
    ```
 
-3. **Update Clarion reference paths**
-   
-   Edit `ClarionMarkdownEditor\ClarionMarkdownEditor.csproj` and update `HintPath` to match your Clarion installation:
+3. **Configure your Clarion path**
+
+   The project uses `Directory.Build.props` to locate your Clarion installation.
+   The default path is `C:\Clarion12\bin`.
+
+   **If your Clarion is installed elsewhere**, create a file called
+   `ClarionMarkdownEditor\Directory.Build.props.user` (gitignored) with:
    ```xml
-   <HintPath>C:\Clarion\Clarion11.1\bin\ICSharpCode.Core.dll</HintPath>
-   <HintPath>C:\Clarion\Clarion11.1\bin\ICSharpCode.SharpDevelop.dll</HintPath>
+   <Project>
+     <PropertyGroup>
+       <ClarionBin>C:\Clarion\Clarion11.1\bin</ClarionBin>
+     </PropertyGroup>
+   </Project>
    ```
-   
-   Change `C:\Clarion\Clarion11.1` to your Clarion path (e.g., `C:\Clarion12`).
+
+   Alternatively, set the `CLARION_BIN` environment variable before building:
+   ```powershell
+   $env:CLARION_BIN = "C:\Clarion\Clarion11.1\bin"
+   ```
 
 4. **Build in Release configuration**
    ```bash
@@ -315,6 +312,7 @@ MarkDownAddin/
 └── ClarionMarkdownEditor/
     ├── ClarionMarkdownEditor.csproj
     ├── ClarionMarkdownEditor.addin      # SharpDevelop addin manifest
+    ├── Directory.Build.props            # Clarion path config (ClarionBin variable)
     ├── Properties/
     │   └── AssemblyInfo.cs
     ├── MarkdownEditorPad.cs             # Dockable pad container
