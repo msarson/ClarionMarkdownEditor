@@ -58,10 +58,13 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - Download: https://developer.microsoft.com/microsoft-edge/webview2/
 
 ### Development (Building from Source)
-- Visual Studio 2017 or later (or MSBuild 15+)
-- .NET Framework 4.8 SDK
+- **[.NET SDK](https://dotnet.microsoft.com/download)** (any modern version — used to run `dotnet build`)
 - Clarion IDE installed (for reference DLLs)
-- NuGet Package Manager
+
+> **Note:** Visual Studio is _not_ required. The .NET SDK is a free, lightweight
+> command-line toolchain. Download the latest version from
+> https://dotnet.microsoft.com/download and run the installer — `dotnet build`  
+> will then be available in any terminal.
 
 ## Installation
 
@@ -173,10 +176,13 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - Download: https://developer.microsoft.com/microsoft-edge/webview2/
 
 ### Development (Building from Source)
-- Visual Studio 2017 or later (or MSBuild 15+)
-- .NET Framework 4.8 SDK
+- **[.NET SDK](https://dotnet.microsoft.com/download)** (any modern version — used to run `dotnet build`)
 - Clarion IDE installed (for reference DLLs)
-- NuGet Package Manager
+
+> **Note:** Visual Studio is _not_ required. The .NET SDK is a free, lightweight
+> command-line toolchain. Download the latest version from
+> https://dotnet.microsoft.com/download and run the installer — `dotnet build`  
+> will then be available in any terminal.
 
 ## Installation
 
