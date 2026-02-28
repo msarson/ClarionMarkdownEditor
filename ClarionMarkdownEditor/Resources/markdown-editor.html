@@ -1770,6 +1770,12 @@
             if (e.ctrlKey) {
                 if (e.key === 'b' || e.key === 'B') { e.preventDefault(); insertBold(); }
                 else if (e.key === 'i' || e.key === 'I') { e.preventDefault(); insertItalic(); }
+                else if (e.key === 's' || e.key === 'S') {
+                    e.preventDefault();
+                    if (window.chrome && window.chrome.webview) {
+                        window.chrome.webview.postMessage({ type: 'saveRequested' });
+                    }
+                }
             }
         });
 

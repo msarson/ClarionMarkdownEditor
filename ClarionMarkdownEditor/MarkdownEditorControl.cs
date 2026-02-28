@@ -1113,6 +1113,20 @@ namespace ClarionMarkdownEditor
                         }
                         break;
 
+                    case "contentChanged":
+                        {
+                            var tabId = ExtractJsonValue(message, "tabId");
+                            if (!string.IsNullOrEmpty(tabId) && _openTabs.TryGetValue(tabId, out var tab))
+                            {
+                                tab.IsDirty = true;
+                            }
+                        }
+                        break;
+
+                    case "saveRequested":
+                        SaveMarkdownFile();
+                        break;
+
                     case "tabDirtyChanged":
                         {
                             var tabId = ExtractNestedJsonValue(message, "data", "tabId");
