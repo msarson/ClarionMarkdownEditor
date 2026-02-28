@@ -1452,6 +1452,7 @@ namespace ClarionMarkdownEditor
                 try
                 {
                     await webView.ExecuteScriptAsync("addStartPageTab()");
+                    _activeTabId = "startPage";
                     await RefreshRecentFilesInStartPage();
                 }
                 catch (Exception ex)
