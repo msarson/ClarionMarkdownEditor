@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    ClarionBin: path to the Clarion IDE bin directory.
+
+    Override options (in priority order):
+      1. Set the CLARION_BIN environment variable before building
+      2. Create a Directory.Build.props.user file alongside this one (gitignored) containing:
+           <Project><PropertyGroup><ClarionBin>D:\MyClarion\bin</ClarionBin></PropertyGroup></Project>
+      3. Pass on the command line: msbuild /p:ClarionBin=D:\MyClarion\bin
+  -->
+  <PropertyGroup>
+    <ClarionBin Condition="'$(CLARION_BIN)' != ''">$(CLARION_BIN)</ClarionBin>
+    <ClarionBin Condition="'$(ClarionBin)' == ''">C:\Clarion12\bin</ClarionBin>
+  </PropertyGroup>
+
+</Project>
