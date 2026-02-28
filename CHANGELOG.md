@@ -12,15 +12,17 @@ Contributors:
 
 ## 2026-02-28
 
-### Changed
+### Build System
 - Converted `.csproj` from old-style MSBuild format to SDK-style
   (`Microsoft.NET.Sdk.WindowsDesktop`). `dotnet build` now works out of the box —
-  NuGet packages (including WebView2) are restored automatically with no need for
-  `nuget.exe` or a separate restore step.
+  NuGet packages (including WebView2) are restored automatically, no `nuget.exe`
+  or separate restore step required.
+- Removed `packages.config` (superseded by `PackageReference`).
+
+### Changed
 - Replaced hardcoded `C:\Clarion12\bin` path with a `Directory.Build.props`
   `$(ClarionBin)` variable. Override via a gitignored `Directory.Build.props.user`
   file or the `CLARION_BIN` environment variable. Default remains `C:\Clarion12\bin`.
-- Removed `packages.config` (superseded by `PackageReference`).
 
 ---
 
