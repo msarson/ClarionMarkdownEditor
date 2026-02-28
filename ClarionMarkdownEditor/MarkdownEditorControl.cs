@@ -1124,7 +1124,7 @@ namespace ClarionMarkdownEditor
                         break;
 
                     case "saveRequested":
-                        SaveMarkdownFile();
+                        BeginInvoke(new Action(SaveMarkdownFile));
                         break;
 
                     case "tabDirtyChanged":
