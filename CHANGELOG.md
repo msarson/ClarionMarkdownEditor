@@ -13,10 +13,14 @@ Contributors:
 ## 2026-02-28
 
 ### Changed
-- Replaced hardcoded `C:\Clarion12\bin` path in `.csproj` with a `Directory.Build.props`
-  `$(ClarionBin)` variable. Developers no longer need to edit the project file — override
-  via a gitignored `Directory.Build.props.user` file or the `CLARION_BIN` environment
-  variable. Default remains `C:\Clarion12\bin`.
+- Converted `.csproj` from old-style MSBuild format to SDK-style
+  (`Microsoft.NET.Sdk.WindowsDesktop`). `dotnet build` now works out of the box —
+  NuGet packages (including WebView2) are restored automatically with no need for
+  `nuget.exe` or a separate restore step.
+- Replaced hardcoded `C:\Clarion12\bin` path with a `Directory.Build.props`
+  `$(ClarionBin)` variable. Override via a gitignored `Directory.Build.props.user`
+  file or the `CLARION_BIN` environment variable. Default remains `C:\Clarion12\bin`.
+- Removed `packages.config` (superseded by `PackageReference`).
 
 ---
 

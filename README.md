@@ -91,18 +91,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
    cd ClarionMarkdownEditor
    ```
 
-2. **Restore NuGet packages**
-   The project uses `packages.config` to reference:
-   - Microsoft.Web.WebView2 (v1.0.2792.45)
-   
-   Packages will restore automatically on build, or manually:
-   ```bash
-   nuget restore ClarionMarkdownEditor.sln
-   # OR
-   dotnet restore ClarionMarkdownEditor.sln
-   ```
-
-3. **Configure your Clarion path**
+2. **Configure your Clarion path**
 
    The project uses `Directory.Build.props` to locate your Clarion installation.
    The default path is `C:\Clarion12\bin`.
@@ -122,7 +111,25 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
    $env:CLARION_BIN = "C:\Clarion\Clarion11.1\bin"
    ```
 
-### Split View (Editor + Preview)
+3. **Build** — NuGet packages (including WebView2) are restored automatically:
+   ```bash
+   dotnet build ClarionMarkdownEditor\ClarionMarkdownEditor.csproj -c Release
+   ```
+
+4. **Deploy to Clarion**
+
+   Copy from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\MarkdownEditor\`:
+   - `ClarionMarkdownEditor.dll`
+   - `ClarionMarkdownEditor.addin`
+   - `Microsoft.Web.WebView2.Core.dll`
+   - `Microsoft.Web.WebView2.WinForms.dll`
+   - `WebView2Loader.dll`
+   - `Resources\highlight.min.js`
+   - `Resources\atom-one-dark.min.css`
+
+5. **Restart Clarion IDE**
+
+## Screenshots
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ New  Open  Save  Save As │ Insert to IDE │ filename.md     │
@@ -199,18 +206,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
    cd ClarionMarkdownEditor
    ```
 
-2. **Restore NuGet packages**
-   The project uses `packages.config` to reference:
-   - Microsoft.Web.WebView2 (v1.0.2792.45)
-   
-   Packages will restore automatically on build, or manually:
-   ```bash
-   nuget restore ClarionMarkdownEditor.sln
-   # OR
-   dotnet restore ClarionMarkdownEditor.sln
-   ```
-
-3. **Configure your Clarion path**
+2. **Configure your Clarion path**
 
    The project uses `Directory.Build.props` to locate your Clarion installation.
    The default path is `C:\Clarion12\bin`.
@@ -230,26 +226,23 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
    $env:CLARION_BIN = "C:\Clarion\Clarion11.1\bin"
    ```
 
-4. **Build in Release configuration**
+3. **Build** — NuGet packages (including WebView2) are restored automatically:
    ```bash
-   dotnet build ClarionMarkdownEditor.sln -c Release
-   # OR
-   msbuild ClarionMarkdownEditor.sln /p:Configuration=Release
+   dotnet build ClarionMarkdownEditor\ClarionMarkdownEditor.csproj -c Release
    ```
 
-5. **Deploy to Clarion**
-   
-   Copy from `ClarionMarkdownEditor\bin\Release\` to `{CLARION_PATH}\accessory\addins\MarkdownEditor\`:
+4. **Deploy to Clarion**
+
+   Copy from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\MarkdownEditor\`:
    - `ClarionMarkdownEditor.dll`
    - `ClarionMarkdownEditor.addin`
    - `Microsoft.Web.WebView2.Core.dll`
    - `Microsoft.Web.WebView2.WinForms.dll`
-   - `Microsoft.Web.WebView2.Wpf.dll`
    - `WebView2Loader.dll`
    - `Resources\highlight.min.js`
    - `Resources\atom-one-dark.min.css`
 
-6. **Restart Clarion IDE**
+5. **Restart Clarion IDE**
 
 ## Usage
 
