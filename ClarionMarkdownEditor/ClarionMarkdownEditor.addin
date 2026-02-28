@@ -3,7 +3,7 @@
     <Identity name="ClarionMarkdownEditor" version="1.0.0"/>
   </Manifest>
   <Runtime>
-    <Import assembly="ClarionMarkdownEditor.dll"/>
+    <Import assembly="MarkdownEditor\ClarionMarkdownEditor.dll"/>
   </Runtime>
   <Path name="/SharpDevelop/Workbench/Pads">
     <Pad id="MarkdownEditor" category="Tools" title="Markdown Editor (Pad)"
