@@ -3,7 +3,7 @@
     <Identity name="ClarionMarkdownEditor" version="1.0.0"/>
   </Manifest>
   <Runtime>
-    <Import assembly="MarkdownEditor\ClarionMarkdownEditor.dll"/>
+    <Import assembly="ClarionMarkdownEditor.dll"/>
   </Runtime>
   <Path name="/SharpDevelop/Workbench/DisplayBindings">
     <DisplayBinding id="MarkdownDisplayBinding"
