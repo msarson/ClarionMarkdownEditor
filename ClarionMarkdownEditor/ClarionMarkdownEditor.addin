@@ -1,10 +1,13 @@
 <AddIn name="Markdown Editor" author="John Hickey" description="Markdown file viewer and editor for Clarion IDE">
   <Manifest>
-    <Identity name="ClarionMarkdownEditor" version="1.0.0"/>
+    <Identity name="ClarionMarkdownEditor" version="1.0.1"/>
   </Manifest>
   <Runtime>
     <Import assembly="ClarionMarkdownEditor.dll"/>
   </Runtime>
+  <Path name="/Workspace/Autostart">
+    <Class id="MarkdownEditorRegisterIcons" class="ClarionMarkdownEditor.RegisterIconsCommand"/>
+  </Path>
   <Path name="/SharpDevelop/Workbench/DisplayBindings">
     <DisplayBinding id="MarkdownDisplayBinding"
                     insertbefore="Text"
@@ -14,11 +17,12 @@
   </Path>
   <Path name="/SharpDevelop/Workbench/Pads">
     <Pad id="MarkdownEditor" category="Tools" title="Markdown Editor (Pad)"
-         icon="PadIcons.ClassBrowser" shortcut="Control|Alt|M"
+         icon="ClarionMarkdownEditor.MarkdownEditorIcon" shortcut="Control|Alt|M"
          class="ClarionMarkdownEditor.MarkdownEditorPad"/>
   </Path>
   <Path name="/SharpDevelop/Workbench/MainMenu/View/Tools">
     <MenuItem id="ShowMarkdownEditorWindow" label="Markdown Editor (Window)"
+              icon="ClarionMarkdownEditor.MarkdownEditorIcon"
               class="ClarionMarkdownEditor.ShowMarkdownEditorWindowCommand"/>
   </Path>
 </AddIn>

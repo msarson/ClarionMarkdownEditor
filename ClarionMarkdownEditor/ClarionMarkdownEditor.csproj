@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\MarkdownEditorIcon.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="ICSharpCode.Core">
       <HintPath>$(ClarionBin)\ICSharpCode.Core.dll</HintPath>
       <Private>False</Private>
