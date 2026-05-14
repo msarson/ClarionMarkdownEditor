@@ -10,6 +10,27 @@ Contributors:
 
 --- 
 
+## v1.0.2 — 2026-05-14 — Save corrupts content containing HTML or backslashes
+
+### Fixed
+- **Saving silently corrupted any file containing `<`, backslashes, tabs, or non-ASCII characters**
+  ([#1](https://github.com/msarson/ClarionMarkdownEditor/issues/1)). `WebView2.ExecuteScriptAsync`
+  returns the script's result as a JSON-encoded string, in which Chromium escapes `<`
+  to its Unicode escape sequence (HTML-safe escaping), single backslashes to `\\`,
+  and any non-ASCII character to its `\uXXXX` form. Both save paths
+  (`GetEditorContentAsync` and `GetTabContentFromJs`) hand-rolled a decoder that only
+  handled `\n`, `\r`, and `\"` — every other escape passed through as the literal
+  characters of the escape and was written to disk. So embedded HTML like `<style>`
+  became a six-character Unicode escape followed by `style>`, single backslashes
+  in paths became doubled, and any literal backslash-`n` inside content was converted
+  to a real newline. Replaced both decoders with a proper JSON string decoder
+  (`DecodeJsonString`) that handles the full JSON escape set including `\uXXXX`.
+- **Repaired README content** previously damaged by this bug — restored single
+  backslashes in Windows paths, removed Unicode-escape leftovers from XML examples,
+  and rejoined a Windows path that had been split across two lines.
+
+---
+
 ## 2026-02-28 — Start Page & Cross-Instance Fixes
 
 ### Fixed

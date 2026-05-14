@@ -954,13 +954,7 @@ namespace ClarionMarkdownEditor
                 try
                 {
                     var result = await webView.ExecuteScriptAsync("getEditorContent()");
-                    // Remove surrounding quotes from JSON string
-                    if (result.StartsWith("\"") && result.EndsWith("\""))
-                    {
-                        result = result.Substring(1, result.Length - 2);
-                        result = result.Replace("\\n", "\n").Replace("\\r", "\r").Replace("\\\"", "\"");
-                    }
-                    return result;
+                    return DecodeJsonString(result);
                 }
                 catch (Exception ex)
                 {
@@ -978,6 +972,75 @@ namespace ClarionMarkdownEditor
         {
             // Use GetAwaiter().GetResult() instead of .Wait() to avoid deadlocks
             return GetEditorContentAsync().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Decodes a JSON-encoded string returned by <c>WebView2.ExecuteScriptAsync</c>.
+        /// Handles every JSON string escape — including \uXXXX (and surrogate pairs) —
+        /// not just the three the old hand-rolled decoder covered.
+        /// </summary>
+        private static string DecodeJsonString(string json)
+        {
+            if (string.IsNullOrEmpty(json)) return json;
+            if (json == "null") return null;
+            if (json.Length < 2 || json[0] != '"' || json[json.Length - 1] != '"')
+            {
+                // Not a JSON string literal — return as-is.
+                return json;
+            }
+
+            var sb = new System.Text.StringBuilder(json.Length - 2);
+            int i = 1;
+            int end = json.Length - 1;
+            while (i < end)
+            {
+                char c = json[i];
+                if (c != '\\')
+                {
+                    sb.Append(c);
+                    i++;
+                    continue;
+                }
+                if (i + 1 >= end)
+                {
+                    sb.Append(c);
+                    i++;
+                    continue;
+                }
+                char esc = json[i + 1];
+                switch (esc)
+                {
+                    case '"': sb.Append('"'); i += 2; break;
+                    case '\\': sb.Append('\\'); i += 2; break;
+                    case '/': sb.Append('/'); i += 2; break;
+                    case 'b': sb.Append('\b'); i += 2; break;
+                    case 'f': sb.Append('\f'); i += 2; break;
+                    case 'n': sb.Append('\n'); i += 2; break;
+                    case 'r': sb.Append('\r'); i += 2; break;
+                    case 't': sb.Append('\t'); i += 2; break;
+                    case 'u':
+                        if (i + 6 <= end &&
+                            int.TryParse(json.Substring(i + 2, 4),
+                                         System.Globalization.NumberStyles.HexNumber,
+                                         System.Globalization.CultureInfo.InvariantCulture,
+                                         out int codeUnit))
+                        {
+                            sb.Append((char)codeUnit);
+                            i += 6;
+                        }
+                        else
+                        {
+                            sb.Append(esc);
+                            i += 2;
+                        }
+                        break;
+                    default:
+                        sb.Append(esc);
+                        i += 2;
+                        break;
+                }
+            }
+            return sb.ToString();
         }
 
         private void SendContentToJs(string content, string fileName)
@@ -1568,14 +1631,7 @@ namespace ClarionMarkdownEditor
                 {
                     string escapedId = EscapeJsString(tabId);
                     var result = await webView.ExecuteScriptAsync($"getTabContent(\"{escapedId}\")");
-
-                    // Remove surrounding quotes from JSON string
-                    if (result.StartsWith("\"") && result.EndsWith("\""))
-                    {
-                        result = result.Substring(1, result.Length - 2);
-                        result = result.Replace("\\n", "\n").Replace("\\r", "\r").Replace("\\\"", "\"");
-                    }
-                    return result;
+                    return DecodeJsonString(result);
                 }
                 catch (Exception ex)
                 {

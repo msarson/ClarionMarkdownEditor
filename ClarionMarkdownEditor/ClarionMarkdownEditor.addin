@@ -1,6 +1,6 @@
 <AddIn name="Markdown Editor" author="John Hickey" description="Markdown file viewer and editor for Clarion IDE">
   <Manifest>
-    <Identity name="ClarionMarkdownEditor" version="1.0.1"/>
+    <Identity name="ClarionMarkdownEditor" version="1.0.2"/>
   </Manifest>
   <Runtime>
     <Import assembly="ClarionMarkdownEditor.dll"/>
