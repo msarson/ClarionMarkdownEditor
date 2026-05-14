@@ -55,7 +55,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 ## Requirements
 
 ### Runtime (End Users)
-- Clarion 11.1 or Clarion 12
+- Clarion 10 or later (tested in Clarion 10, 11.1, and 12)
 - .NET Framework 4.8 or higher
 - **Microsoft Edge WebView2 Runtime** (usually pre-installed on Windows 10/11)
   - Download: https://developer.microsoft.com/microsoft-edge/webview2/
