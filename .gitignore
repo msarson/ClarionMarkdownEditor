@@ -33,3 +33,9 @@ Desktop.ini
 
 # Database files
 *.db
+
+# Release artifacts (uploaded to GitHub Releases, not tracked in repo)
+/ClarionMarkdownEditor-v*.zip
+
+# Claude Code local state
+.claude/
