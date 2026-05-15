@@ -167,6 +167,8 @@
         .tab.active { background: #1e1e1e; color: #d4d4d4; border-bottom: 2px solid #007acc; }
         .tab .tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
         .tab .tab-dirty { color: #ffc107; margin-right: 4px; font-weight: bold; }
+        .tab .tab-lock { margin-right: 4px; font-size: 11px; opacity: 0.85; }
+        .tab.tab-readonly { font-style: italic; }
         .tab .tab-close {
             margin-left: 8px;
             padding: 2px 4px;

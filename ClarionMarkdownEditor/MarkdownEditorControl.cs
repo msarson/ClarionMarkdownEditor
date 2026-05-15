@@ -743,7 +743,7 @@ namespace ClarionMarkdownEditor
             _activeTabId = tabId;
             _currentFilePath = null;
 
-            AddTabToJs(tabId, tabName, result.Content ?? string.Empty, null);
+            AddTabToJs(tabId, tabName, result.Content ?? string.Empty, null, isReadOnly: true);
         }
 
         private static string DeriveTabNameFromUrl(string url)
@@ -1611,7 +1611,7 @@ namespace ClarionMarkdownEditor
         /// <summary>
         /// Calls JavaScript to add a new tab.
         /// </summary>
-        private async void AddTabToJs(string id, string fileName, string content, string filePath)
+        private async void AddTabToJs(string id, string fileName, string content, string filePath, bool isReadOnly = false)
         {
             if (_isWebView2Ready)
             {
@@ -1624,11 +1624,10 @@ namespace ClarionMarkdownEditor
                     string escapedId = EscapeJsString(id);
                     string escapedFileName = EscapeJsString(fileName);
                     string escapedContent = EscapeJsString(normalizedContent);
-                    string escapedFilePath = filePath != null ? EscapeJsString(filePath) : "null";
+                    string filePathArg = filePath != null ? "\"" + EscapeJsString(filePath) + "\"" : "null";
+                    string readOnlyArg = isReadOnly ? "true" : "false";
 
-                    var script = filePath != null
-                        ? $"addTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedContent}\", \"{escapedFilePath}\")"
-                        : $"addTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedContent}\", null)";
+                    var script = $"addTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedContent}\", {filePathArg}, {readOnlyArg})";
 
                     await webView.ExecuteScriptAsync(script);
                 }

@@ -172,7 +172,7 @@
         }
 
         // Add a new tab or switch to existing one with same file path
-        function addTab(tabId, fileName, content, filePath) {
+        function addTab(tabId, fileName, content, filePath, isReadOnly) {
             // Check if a tab with this file path already exists
             var existingTabId = findTabByFilePath(filePath);
             if (existingTabId) {
@@ -185,20 +185,27 @@
                 tabs[activeTabId].content = editor.value;
             }
 
+            var readOnly = isReadOnly === true;
+
             // Create tab data
             tabs[tabId] = {
                 content: content || '',
                 cleanContent: content || '',
                 isDirty: false,
                 filePath: filePath || '',
-                fileName: fileName || 'Untitled'
+                fileName: fileName || 'Untitled',
+                isReadOnly: readOnly
             };
 
             // Create tab element
             var tabEl = document.createElement('div');
-            tabEl.className = 'tab';
+            tabEl.className = 'tab' + (readOnly ? ' tab-readonly' : '');
             tabEl.setAttribute('data-tab-id', tabId);
+            var lockBadge = readOnly
+                ? '<span class="tab-lock" title="Read-only (from URL)">🔒</span>'
+                : '';
             tabEl.innerHTML = '<span class="tab-dirty" style="display:none;">*</span>' +
+                              lockBadge +
                               '<span class="tab-title">' + escapeHtml(fileName) + '</span>' +
                               '<span class="tab-close" title="Close">&times;</span>';
 
@@ -263,6 +270,7 @@
             activeTabId = tabId;
             editor.value = tabs[tabId].content;
             isDirty = tabs[tabId].isDirty;
+            editor.readOnly = tabs[tabId].isReadOnly === true;
             updatePreview();
 
             // Notify C#
