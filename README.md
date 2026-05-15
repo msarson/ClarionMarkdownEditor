@@ -50,6 +50,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - Blockquotes, Horizontal Rules
   - Links, Images, Tables
 - **File Operations**: New, Open, Save, Save As
+- **Open Markdown from URL**: Load a Markdown document directly from a URL — raw URLs, `github.com/owner/repo/blob/...`, or just `github.com/owner/repo` (auto-resolves to `README.md` on `main`, falling back to `master`). URL-loaded tabs are read-only with a 🔒 badge; **Save As** promotes them into editable local files. Relative images and links resolve against the source URL, and clicking a relative `.md` link opens it as a new tab. Fetched bodies are cached under `%APPDATA%\ClarionMarkdownEditor\cache\` with conditional GETs, so reopens are fast and a stale copy is served when offline. Available via **Tools → Open Markdown from URL...** or the **🌐 Open URL...** button on the Start Page (Recent URLs list included)
 - **About Dialog**: View credits and project information (File > About)
 - **IDE Integration**: Insert markdown content directly into the active Clarion editor
 - **Keyboard Shortcuts**:
@@ -327,6 +328,31 @@ User settings are stored in:
 ```
 %APPDATA%\ClarionMarkdownEditor\settings.txt
 ```
+
+Cached URL bodies are stored alongside under `cache\` as `<hash>.body`
+(content) and `<hash>.meta` (ETag, Last-Modified, stored timestamp)
+pairs. Safe to delete the whole `cache\` folder at any time.
+
+### Public API for Other Addins
+
+Other Clarion IDE addins can ask the Markdown Editor to open a URL
+without taking a hard reference on `ClarionMarkdownEditor.dll` — useful
+when the editor may or may not be installed on the user's machine:
+
+```csharp
+var t = Type.GetType("ClarionMarkdownEditor.MarkdownEditorApi, ClarionMarkdownEditor");
+t?.GetMethod("OpenUrl")?.Invoke(null, new object[] { url });
+```
+
+`MarkdownEditorApi.OpenUrl(string url)` ensures the editor pad is
+visible, fetches the document (with cache + offline fallback), and
+opens it in a new read-only tab. Errors surface as in-editor message
+boxes — the call itself is fire-and-forget and never throws back to
+the caller.
+
+If the editor isn't installed, `Type.GetType` returns null and the
+expression silently falls back. A typical caller will then offer to
+launch the URL in the system browser instead.
 
 ## Development Notes
 
