@@ -1016,15 +1016,21 @@ namespace ClarionMarkdownEditor
                     {
                         File.WriteAllText(dialog.FileName, content);
 
-                        // Update tab with new file path
+                        // Saving a URL-loaded tab locally promotes it to a regular
+                        // editable file tab — clear the read-only / URL provenance.
+                        bool wasReadOnly = activeTab.IsReadOnly;
                         activeTab.FilePath = dialog.FileName;
                         activeTab.FileName = Path.GetFileName(dialog.FileName);
                         activeTab.IsDirty = false;
+                        activeTab.IsReadOnly = false;
+                        activeTab.SourceUrl = null;
+                        activeTab.SourceBaseUrl = null;
 
                         _currentFilePath = dialog.FileName;
 
                         SendMessageToJs("fileSaved", dialog.FileName);
-                        UpdateTabInJs(_activeTabId, activeTab.FileName, dialog.FileName);
+                        UpdateTabInJs(_activeTabId, activeTab.FileName, dialog.FileName,
+                                      isReadOnly: wasReadOnly ? (bool?)false : null);
                         ClearDirtyIndicatorInJs(_activeTabId);
 
                         AddToRecentFiles(dialog.FileName);
@@ -1704,7 +1710,7 @@ namespace ClarionMarkdownEditor
         /// <summary>
         /// Calls JavaScript to update a tab's name and path.
         /// </summary>
-        private async void UpdateTabInJs(string tabId, string fileName, string filePath)
+        private async void UpdateTabInJs(string tabId, string fileName, string filePath, bool? isReadOnly = null)
         {
             if (_isWebView2Ready)
             {
@@ -1713,7 +1719,8 @@ namespace ClarionMarkdownEditor
                     string escapedId = EscapeJsString(tabId);
                     string escapedFileName = EscapeJsString(fileName);
                     string escapedFilePath = EscapeJsString(filePath);
-                    await webView.ExecuteScriptAsync($"updateTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedFilePath}\")");
+                    string readOnlyArg = isReadOnly.HasValue ? (isReadOnly.Value ? ", true" : ", false") : string.Empty;
+                    await webView.ExecuteScriptAsync($"updateTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedFilePath}\"{readOnlyArg})");
                 }
                 catch (Exception ex)
                 {

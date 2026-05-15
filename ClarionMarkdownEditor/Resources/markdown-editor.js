@@ -537,18 +537,41 @@
             return result;
         }
 
-        // Update tab file info (e.g., after Save As)
-        function updateTabInfo(tabId, fileName, filePath) {
+        // Update tab file info (e.g., after Save As). When isReadOnly is passed
+        // (true/false), also update the tab's read-only state and visual badge.
+        function updateTabInfo(tabId, fileName, filePath, isReadOnly) {
             if (!tabs[tabId]) return;
             tabs[tabId].fileName = fileName;
             tabs[tabId].filePath = filePath;
 
-            // Update tab element
             var tabEl = tabBar.querySelector('[data-tab-id="' + tabId + '"]');
             if (tabEl) {
                 var titleEl = tabEl.querySelector('.tab-title');
                 if (titleEl) {
                     titleEl.textContent = fileName;
+                }
+            }
+
+            if (typeof isReadOnly === 'boolean') {
+                tabs[tabId].isReadOnly = isReadOnly;
+                if (tabEl) {
+                    if (isReadOnly) {
+                        tabEl.classList.add('tab-readonly');
+                        if (!tabEl.querySelector('.tab-lock')) {
+                            var lock = document.createElement('span');
+                            lock.className = 'tab-lock';
+                            lock.title = 'Read-only (from URL)';
+                            lock.textContent = '🔒';
+                            tabEl.insertBefore(lock, tabEl.querySelector('.tab-title'));
+                        }
+                    } else {
+                        tabEl.classList.remove('tab-readonly');
+                        var existingLock = tabEl.querySelector('.tab-lock');
+                        if (existingLock) existingLock.remove();
+                    }
+                }
+                if (tabId === activeTabId) {
+                    editor.readOnly = isReadOnly;
                 }
             }
         }
