@@ -1167,6 +1167,8 @@
             if (type === 'fileSaved') {
                 isDirty = false;
                 setStatus('Saved: ' + data);
+            } else if (type === 'statusMessage') {
+                setStatus(data);
             }
         }
 

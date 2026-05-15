@@ -755,7 +755,7 @@ namespace ClarionMarkdownEditor
             if (!result.Success)
             {
                 MessageBox.Show(
-                    $"Couldn't load:\n{url}\n\n{result.ErrorMessage ?? "Unknown error"}",
+                    FormatFetchError(url, result),
                     "Open Markdown from URL",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -786,6 +786,12 @@ namespace ClarionMarkdownEditor
 
             AddTabToJs(tabId, tabName, result.Content ?? string.Empty, null, isReadOnly: true, baseUrl: baseUrl);
 
+            if (result.IsStale)
+            {
+                var detail = string.IsNullOrEmpty(result.ErrorMessage) ? "offline" : result.ErrorMessage;
+                SendMessageToJs("statusMessage", $"Loaded from cache ({detail})");
+            }
+
             // Keep the user's original URL on the recent list (not the resolved
             // one) so probe + fallback behaviour replays the next time too.
             AddToRecentUrls(url);
@@ -812,6 +818,26 @@ namespace ClarionMarkdownEditor
             {
                 return "Untitled URL";
             }
+        }
+
+        private static string FormatFetchError(string requestedUrl, FetchResult result)
+        {
+            string headline;
+            if (result.StatusCode == 404)
+                headline = "Not found (HTTP 404). Check the URL is correct.";
+            else if (result.StatusCode == 401 || result.StatusCode == 403)
+                headline = "Access denied (HTTP " + result.StatusCode + "). The document may be private.";
+            else if (result.StatusCode >= 500 && result.StatusCode < 600)
+                headline = "The server returned an error (HTTP " + result.StatusCode + "). Try again later.";
+            else if (!string.IsNullOrEmpty(result.ErrorMessage) &&
+                     result.ErrorMessage.IndexOf("timed out", StringComparison.OrdinalIgnoreCase) >= 0)
+                headline = "The request timed out. Check your internet connection and try again.";
+            else if (!string.IsNullOrEmpty(result.ErrorMessage))
+                headline = "Couldn't reach the server: " + result.ErrorMessage;
+            else
+                headline = "Couldn't load the URL.";
+
+            return headline + "\r\n\r\n" + requestedUrl;
         }
 
         private static string DeriveBaseUrlFromResolved(string url)
