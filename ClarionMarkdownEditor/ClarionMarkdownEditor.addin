@@ -24,5 +24,8 @@
     <MenuItem id="ShowMarkdownEditorWindow" label="Markdown Editor (Window)"
               icon="ClarionMarkdownEditor.MarkdownEditorIcon"
               class="ClarionMarkdownEditor.ShowMarkdownEditorWindowCommand"/>
+    <MenuItem id="OpenMarkdownFromUrl" label="Open Markdown from URL..."
+              icon="ClarionMarkdownEditor.MarkdownEditorIcon"
+              class="ClarionMarkdownEditor.OpenMarkdownFromUrlCommand"/>
   </Path>
 </AddIn>
