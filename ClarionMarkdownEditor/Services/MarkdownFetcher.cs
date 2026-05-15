@@ -19,6 +19,10 @@ namespace ClarionMarkdownEditor.Services
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
         public int StatusCode { get; set; }
+
+        // Set when Content was served from cache because the live fetch failed.
+        // Success remains true so callers can render it; UI may want a "stale" badge.
+        public bool IsStale { get; set; }
     }
 
     public class FetchOptions
