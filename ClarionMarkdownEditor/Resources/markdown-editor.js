@@ -172,7 +172,7 @@
         }
 
         // Add a new tab or switch to existing one with same file path
-        function addTab(tabId, fileName, content, filePath, isReadOnly) {
+        function addTab(tabId, fileName, content, filePath, isReadOnly, baseUrl) {
             // Check if a tab with this file path already exists
             var existingTabId = findTabByFilePath(filePath);
             if (existingTabId) {
@@ -194,7 +194,8 @@
                 isDirty: false,
                 filePath: filePath || '',
                 fileName: fileName || 'Untitled',
-                isReadOnly: readOnly
+                isReadOnly: readOnly,
+                baseUrl: baseUrl || ''
             };
 
             // Create tab element
@@ -846,10 +847,53 @@
             }
         }
 
+        function isAbsoluteUrl(u) {
+            if (!u) return false;
+            return /^[a-z][a-z0-9+\-.]*:/i.test(u) || u.indexOf('//') === 0 || u.charAt(0) === '#';
+        }
+
+        function resolveAgainstBase(baseUrl, relative) {
+            try { return new URL(relative, baseUrl).href; }
+            catch (e) { return relative; }
+        }
+
+        // Rewrites relative href/src against the active tab's baseUrl so
+        // documents loaded from a URL render images and follow links correctly.
+        // Tags relative .md/.markdown anchors with data-md-relative so the
+        // link-click handler can intercept them and open a new URL tab.
+        function rewriteRelativeUrls(root, baseUrl) {
+            if (!baseUrl || !root) return;
+            var imgs = root.querySelectorAll('img');
+            for (var i = 0; i < imgs.length; i++) {
+                var src = imgs[i].getAttribute('src');
+                if (src && !isAbsoluteUrl(src)) {
+                    imgs[i].setAttribute('src', resolveAgainstBase(baseUrl, src));
+                }
+            }
+            var links = root.querySelectorAll('a');
+            for (var j = 0; j < links.length; j++) {
+                var href = links[j].getAttribute('href');
+                if (!href || isAbsoluteUrl(href)) continue;
+                var resolved = resolveAgainstBase(baseUrl, href);
+                links[j].setAttribute('href', resolved);
+                var lower = href.toLowerCase().split('#')[0].split('?')[0];
+                if (lower.endsWith('.md') || lower.endsWith('.markdown')) {
+                    links[j].setAttribute('data-md-relative', resolved);
+                }
+            }
+        }
+
         function updatePreview() {
             var currentGeneration = ++renderGeneration;
             var text = editor.value;
             preview.innerHTML = marked.parse(text);
+
+            // If the active tab was loaded from a URL, resolve relative
+            // image/link refs against its base URL.
+            var activeTab = activeTabId ? tabs[activeTabId] : null;
+            if (activeTab && activeTab.baseUrl) {
+                rewriteRelativeUrls(preview, activeTab.baseUrl);
+            }
 
             // Apply syntax highlighting to all code blocks
             var statusMsg = 'Ready';
