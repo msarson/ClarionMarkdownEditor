@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows.Forms;
 using ICSharpCode.SharpDevelop.Gui;
 
@@ -17,9 +18,10 @@ namespace ClarionMarkdownEditor
     public static class MarkdownEditorApi
     {
         /// <summary>
-        /// Opens a Markdown document from a URL in the editor pad, bringing
-        /// the pad to the front. Fire-and-forget: errors surface as message
-        /// boxes inside the editor, not exceptions back to the caller.
+        /// Opens a Markdown document from a URL in the editor's document window,
+        /// reusing an existing window if one is open. Fire-and-forget: errors
+        /// surface as message boxes inside the editor, not exceptions back to
+        /// the caller.
         /// Supported URL forms:
         /// - raw.githubusercontent.com URLs (passed through)
         /// - github.com/owner/repo/blob/branch/path.md (rewritten to raw)
@@ -31,7 +33,7 @@ namespace ClarionMarkdownEditor
 
             try
             {
-                var control = EnsurePadVisible();
+                var control = EnsureWindowVisible();
                 if (control == null) return;
 
                 // LoadUrlAsync is awaitable but we run it fire-and-forget; the
@@ -47,23 +49,40 @@ namespace ClarionMarkdownEditor
             }
         }
 
-        private static MarkdownEditorControl EnsurePadVisible()
+        // Opens (or refocuses) a MarkdownEditorViewContent document window and
+        // returns its underlying control. Mirrors ShowMarkdownEditorWindowCommand
+        // so new entry points land in the full-page editor rather than the
+        // legacy dockable pad.
+        private static MarkdownEditorControl EnsureWindowVisible()
         {
             var workbench = WorkbenchSingleton.Workbench;
             if (workbench == null) return null;
 
-            // GetPad / BringPadToFront via reflection — same pattern the existing
-            // ShowMarkdownEditorCommand uses for IDE-version compatibility.
-            var getPad = workbench.GetType().GetMethod("GetPad", new[] { typeof(Type) });
-            var padDescriptor = getPad?.Invoke(workbench, new object[] { typeof(MarkdownEditorPad) });
-            if (padDescriptor == null) return null;
+            var existing = workbench.ViewContentCollection
+                .OfType<MarkdownEditorViewContent>()
+                .FirstOrDefault();
 
-            padDescriptor.GetType().GetMethod("BringPadToFront")?.Invoke(padDescriptor, null);
+            if (existing != null)
+            {
+                existing.WorkbenchWindow?.SelectWindow();
+                return existing.Control as MarkdownEditorControl;
+            }
 
-            // PadContent gives us the actual MarkdownEditorPad instance; .Control is the control.
-            var padContent = padDescriptor.GetType().GetProperty("PadContent")?.GetValue(padDescriptor, null)
-                             as MarkdownEditorPad;
-            return padContent?.Control as MarkdownEditorControl;
+            var viewContent = new MarkdownEditorViewContent();
+            var showView = workbench.GetType().GetMethod("ShowView", new[] { typeof(IViewContent) });
+            if (showView != null)
+            {
+                showView.Invoke(workbench, new object[] { viewContent });
+            }
+            else
+            {
+                var viewContentsProp = workbench.GetType().GetProperty("ViewContentCollection");
+                var collection = viewContentsProp?.GetValue(workbench, null);
+                var addMethod = collection?.GetType().GetMethod("Add", new[] { typeof(IViewContent) });
+                addMethod?.Invoke(collection, new object[] { viewContent });
+            }
+
+            return viewContent.Control as MarkdownEditorControl;
         }
     }
 }
