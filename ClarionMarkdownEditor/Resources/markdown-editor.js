@@ -623,26 +623,24 @@
         function showStartPage() {
             var startPageEl = document.getElementById('startPage');
             var editorContainer = document.querySelector('.editor-container');
-            var formatToolbar = document.querySelector('.format-toolbar');
 
             if (startPageEl && editorContainer) {
                 startPageEl.style.display = 'flex';
                 editorContainer.style.display = 'none';
-                if (formatToolbar) formatToolbar.style.display = 'none';
                 isStartPageActive = true;
+                applyFormatToolbarVisibility();
             }
         }
 
         function hideStartPage() {
             var startPageEl = document.getElementById('startPage');
             var editorContainer = document.querySelector('.editor-container');
-            var formatToolbar = document.querySelector('.format-toolbar');
 
             if (startPageEl && editorContainer) {
                 startPageEl.style.display = 'none';
                 editorContainer.style.display = 'flex';
-                if (formatToolbar) formatToolbar.style.display = 'flex';
                 isStartPageActive = false;
+                applyFormatToolbarVisibility();
             }
         }
 
@@ -936,13 +934,19 @@
             applyFormatToolbarVisibility();
         }
 
-        // Format toolbar is hidden when (a) the preview is fullscreen, or
-        // (b) the active tab is read-only — those buttons can't do anything
-        // on a locked textarea anyway.
+        // Format toolbar is hidden when (a) the Start Page is up, (b) the
+        // preview is fullscreen, or (c) the active tab is read-only —
+        // those buttons can't do anything on a locked textarea anyway.
+        // Clears any leftover inline display style so the class-based rule
+        // actually wins (showStartPage / hideStartPage historically used
+        // inline styles that override class declarations).
         function applyFormatToolbarVisibility() {
             if (!formatToolbar) return;
             var activeTab = activeTabId ? tabs[activeTabId] : null;
-            var hide = isFullscreen || (activeTab && activeTab.isReadOnly === true);
+            var hide = isStartPageActive ||
+                       isFullscreen ||
+                       (activeTab && activeTab.isReadOnly === true);
+            formatToolbar.style.display = '';
             if (hide) {
                 formatToolbar.classList.add('hidden');
             } else {
