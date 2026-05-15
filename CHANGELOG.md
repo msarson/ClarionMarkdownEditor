@@ -10,6 +10,47 @@ Contributors:
 
 --- 
 
+## v1.1.0 — 2026-05-15 — Open Markdown from URL
+
+### Added
+- **Open Markdown from URL** ([#4](https://github.com/msarson/ClarionMarkdownEditor/issues/4)).
+  Load a Markdown document directly from a URL via **Tools → Open Markdown from URL...**
+  or the new **🌐 Open URL...** button on the Start Page. Supported URL forms:
+  - Raw URLs (`raw.githubusercontent.com/...`)
+  - GitHub blob URLs (`github.com/owner/repo/blob/branch/...`) — rewritten to raw
+  - Bare GitHub repo URLs (`github.com/owner/repo`) — probe `README.md` on `main`, fall back to `master`
+- **Read-only tab mode** for URL-loaded documents — locked textarea, 🔒 badge, italic tab
+  title, format toolbar hidden while the tab is active. Opens in expanded (rendered-only)
+  view by default since URL tabs are for reading. **Ctrl+S** routes through Save As to
+  let the user save a local editable copy — the tab then drops the lock and the
+  expanded mode automatically.
+- **Per-tab expanded/split preference** — Expand/Split is now remembered per tab,
+  so switching between a URL tab (expanded) and a file tab (split) no longer leaks
+  state across tabs.
+- **Relative URL resolution** — `![](images/foo.png)` and similar relative references
+  inside a fetched README resolve against the source URL. Relative `.md` link clicks
+  open in a new in-editor tab; absolute `http(s)` links open in the system default
+  browser via `Process.Start` (so the WebView2 never navigates away from the editor).
+- **Recent URLs list** on the Start Page, persisted in `SettingsService` alongside
+  recent files (capped at 15 entries).
+- **Public API for cross-addin invocation**: `MarkdownEditorApi.OpenUrl(string url)`.
+  Other Clarion IDE addins can call this via reflection without taking a hard
+  reference on `ClarionMarkdownEditor.dll` — useful for things like an "View README"
+  action in addin-finder that delegates to the editor when present.
+- **Disk cache** for fetched URLs under `%APPDATA%\ClarionMarkdownEditor\cache\` —
+  conditional GETs (ETag / If-Modified-Since) so reopens hit 304, and a stale copy
+  is served when the network is unavailable (with a status bar hint).
+- **Friendly fetch errors** — distinct messages for 404 / 401-403 / 5xx / timeout /
+  generic transport failure, each with the originally requested URL beneath.
+
+### Changed
+- `System.Net.Http` added to project references (not in the SDK default for the
+  WindowsDesktop SDK).
+- `addTab` / `updateTabInfo` JS signatures gained `isReadOnly` and `baseUrl`
+  parameters. Defaults preserve old-style calls.
+
+---
+
 ## v1.0.2 — 2026-05-14 — Save corrupts content containing HTML or backslashes
 
 ### Fixed
