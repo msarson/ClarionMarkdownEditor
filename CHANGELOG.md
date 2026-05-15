@@ -10,6 +10,20 @@ Contributors:
 
 --- 
 
+## v1.1.1 — 2026-05-15 — Fix format toolbar visible after Start Page → URL tab
+
+### Fixed
+- **Format toolbar stayed visible when opening a URL into a read-only tab from the
+  Start Page** ([#5](https://github.com/msarson/ClarionMarkdownEditor/issues/5)).
+  `hideStartPage` set the toolbar's `display` as an inline style, which overrode
+  the `.format-toolbar.hidden` class added by the v1.1.0 read-only visibility
+  logic. Made `applyFormatToolbarVisibility` the single source of truth — it now
+  also considers `isStartPageActive` and clears the inline style before toggling
+  the class, so the class-based rule actually wins. Most visible when clicking
+  **View README** in Addin Finder while the editor's Start Page was up.
+
+---
+
 ## v1.1.0 — 2026-05-15 — Open Markdown from URL
 
 ### Added
