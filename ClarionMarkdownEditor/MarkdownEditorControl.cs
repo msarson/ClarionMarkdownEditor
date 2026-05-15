@@ -1400,6 +1400,30 @@ namespace ClarionMarkdownEditor
                         SaveMarkdownFile();
                         break;
 
+                    case "openUrl":
+                        {
+                            var openUrlTarget = ExtractJsonValue(message, "url");
+                            if (!string.IsNullOrEmpty(openUrlTarget))
+                                _ = LoadUrlAsync(openUrlTarget);
+                        }
+                        break;
+
+                    case "openExternal":
+                        {
+                            var externalUrl = ExtractJsonValue(message, "url");
+                            if (!string.IsNullOrEmpty(externalUrl) &&
+                                Uri.TryCreate(externalUrl, UriKind.Absolute, out var extUri) &&
+                                (extUri.Scheme == Uri.UriSchemeHttp || extUri.Scheme == Uri.UriSchemeHttps))
+                            {
+                                try { System.Diagnostics.Process.Start(extUri.ToString()); }
+                                catch (Exception ex)
+                                {
+                                    System.Diagnostics.Debug.WriteLine($"openExternal failed: {ex.Message}");
+                                }
+                            }
+                        }
+                        break;
+
                     case "darkModeChanged":
                         {
                             var isDarkStr = ExtractJsonValue(message, "isDark");

@@ -1159,5 +1159,32 @@
             }
         });
 
+        // Intercept anchor clicks in the preview:
+        //   - .md / .markdown relative links → open as a new URL tab in the editor
+        //   - other http(s) absolute links  → open in the system default browser
+        //   - in-document fragment links    → pass through
+        preview.addEventListener('click', function(e) {
+            var a = e.target.closest ? e.target.closest('a') : null;
+            if (!a) return;
+
+            var mdRelative = a.getAttribute('data-md-relative');
+            if (mdRelative) {
+                e.preventDefault();
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({ type: 'openUrl', url: mdRelative });
+                }
+                return;
+            }
+
+            var href = a.getAttribute('href');
+            if (!href || href.charAt(0) === '#') return;
+            if (/^https?:/i.test(href)) {
+                e.preventDefault();
+                if (window.chrome && window.chrome.webview) {
+                    window.chrome.webview.postMessage({ type: 'openExternal', url: href });
+                }
+            }
+        });
+
         // Initialize
         updatePreview();
