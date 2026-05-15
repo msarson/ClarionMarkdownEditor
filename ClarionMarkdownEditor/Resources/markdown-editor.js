@@ -187,7 +187,8 @@
 
             var readOnly = isReadOnly === true;
 
-            // Create tab data
+            // Create tab data. URL/read-only tabs default to expanded
+            // (rendered-only) view since they're meant for reading.
             tabs[tabId] = {
                 content: content || '',
                 cleanContent: content || '',
@@ -195,7 +196,8 @@
                 filePath: filePath || '',
                 fileName: fileName || 'Untitled',
                 isReadOnly: readOnly,
-                baseUrl: baseUrl || ''
+                baseUrl: baseUrl || '',
+                isFullscreen: readOnly
             };
 
             // Create tab element
@@ -272,6 +274,11 @@
             editor.value = tabs[tabId].content;
             isDirty = tabs[tabId].isDirty;
             editor.readOnly = tabs[tabId].isReadOnly === true;
+
+            // Apply the tab's saved expanded/split preference. Falsy → false
+            // so old tabs without the field stay in split view.
+            applyFullscreen(tabs[tabId].isFullscreen === true);
+
             updatePreview();
 
             // Notify C#
@@ -572,6 +579,14 @@
                 }
                 if (tabId === activeTabId) {
                     editor.readOnly = isReadOnly;
+                    // Promoting URL → editable: leave reading mode so the
+                    // user can actually see what they're editing.
+                    if (!isReadOnly && tabs[tabId].isFullscreen) {
+                        tabs[tabId].isFullscreen = false;
+                        applyFullscreen(false);
+                    } else {
+                        applyFormatToolbarVisibility();
+                    }
                 }
             }
         }
@@ -905,20 +920,42 @@
             }, DEBOUNCE_MS);
         }
 
-        function toggleFullscreen() {
-            isFullscreen = !isFullscreen;
+        function applyFullscreen(on) {
+            isFullscreen = !!on;
             if (isFullscreen) {
                 editorPane.classList.add('hidden');
                 previewPane.classList.add('fullscreen');
-                formatToolbar.classList.add('hidden');
                 toggleBtn.textContent = 'Split';
                 toggleBtn.title = 'Show editor and preview side by side';
             } else {
                 editorPane.classList.remove('hidden');
                 previewPane.classList.remove('fullscreen');
-                formatToolbar.classList.remove('hidden');
                 toggleBtn.textContent = 'Expand';
                 toggleBtn.title = 'Toggle fullscreen preview';
+            }
+            applyFormatToolbarVisibility();
+        }
+
+        // Format toolbar is hidden when (a) the preview is fullscreen, or
+        // (b) the active tab is read-only — those buttons can't do anything
+        // on a locked textarea anyway.
+        function applyFormatToolbarVisibility() {
+            if (!formatToolbar) return;
+            var activeTab = activeTabId ? tabs[activeTabId] : null;
+            var hide = isFullscreen || (activeTab && activeTab.isReadOnly === true);
+            if (hide) {
+                formatToolbar.classList.add('hidden');
+            } else {
+                formatToolbar.classList.remove('hidden');
+            }
+        }
+
+        function toggleFullscreen() {
+            applyFullscreen(!isFullscreen);
+            // Persist the user's choice on the active tab so switching away
+            // and back doesn't surprise them.
+            if (activeTabId && tabs[activeTabId]) {
+                tabs[activeTabId].isFullscreen = isFullscreen;
             }
         }
 
