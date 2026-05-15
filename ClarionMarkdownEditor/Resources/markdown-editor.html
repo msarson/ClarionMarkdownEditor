@@ -43,6 +43,10 @@
                         <span class="btn-icon">&#128194;</span>
                         <span class="btn-text">Open File</span>
                     </button>
+                    <button class="start-page-btn" onclick="startPageOpenUrl()">
+                        <span class="btn-icon">&#127760;</span>
+                        <span class="btn-text">Open URL...</span>
+                    </button>
                 </div>
                 <div class="start-page-recent">
                     <div class="recent-header">
@@ -51,6 +55,13 @@
                     </div>
                     <div class="recent-files-list" id="recentFilesList"></div>
                     <div class="recent-empty" id="recentEmpty" style="display: none;"><p>No recent files</p></div>
+                </div>
+                <div class="start-page-recent">
+                    <div class="recent-header">
+                        <h2>Recent URLs</h2>
+                    </div>
+                    <div class="recent-files-list" id="recentUrlsList"></div>
+                    <div class="recent-empty" id="recentUrlsEmpty" style="display: none;"><p>No recent URLs</p></div>
                 </div>
             </div>
         </div>

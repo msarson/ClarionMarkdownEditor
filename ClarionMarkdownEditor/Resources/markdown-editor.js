@@ -789,11 +789,80 @@
             }
         }
 
+        function startPageOpenUrl() {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({ type: 'startPageAction', data: { action: 'openUrl' } });
+            }
+        }
+
+        function startPageOpenRecentUrl(url) {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({
+                    type: 'startPageAction',
+                    data: { action: 'openRecentUrl', url: url }
+                });
+            }
+        }
+
+        function startPageRemoveRecentUrl(index) {
+            if (window.chrome && window.chrome.webview) {
+                window.chrome.webview.postMessage({
+                    type: 'startPageAction',
+                    data: { action: 'removeRecentUrl', index: index.toString() }
+                });
+            }
+        }
+
+        function populateRecentUrls(recentUrls) {
+            var listEl = document.getElementById('recentUrlsList');
+            var emptyEl = document.getElementById('recentUrlsEmpty');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+
+            if (!recentUrls || recentUrls.length === 0) {
+                listEl.style.display = 'none';
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+
+            listEl.style.display = 'flex';
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            recentUrls.forEach(function(item, index) {
+                var itemEl = document.createElement('div');
+                itemEl.className = 'recent-file-item';
+                itemEl.setAttribute('data-url', item.url);
+
+                itemEl.innerHTML =
+                    '<div class="recent-file-info">' +
+                        '<div class="recent-file-name">' + escapeHtml(item.name || item.url) + '</div>' +
+                        '<div class="recent-file-path">' + escapeHtml(item.url) + '</div>' +
+                    '</div>' +
+                    '<button class="recent-file-remove" title="Remove from list">&times;</button>';
+
+                itemEl.addEventListener('click', function(e) {
+                    if (!e.target.classList.contains('recent-file-remove')) {
+                        startPageOpenRecentUrl(item.url);
+                    }
+                });
+
+                var removeBtn = itemEl.querySelector('.recent-file-remove');
+                removeBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    startPageRemoveRecentUrl(index);
+                });
+
+                listEl.appendChild(itemEl);
+            });
+        }
+
         // Expose Start Page functions to window for C# access
         window.addStartPageTab = addStartPageTab;
         window.showStartPage = showStartPage;
         window.hideStartPage = hideStartPage;
         window.populateRecentFiles = populateRecentFiles;
+        window.populateRecentUrls = populateRecentUrls;
         window.switchToStartPage = switchToStartPage;
         window.initStartPage = initStartPage;
         // ====================================

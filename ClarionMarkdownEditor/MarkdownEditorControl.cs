@@ -50,6 +50,8 @@ namespace ClarionMarkdownEditor
     {
         private const int MAX_RECENT_FILES = 30;
         private const string RECENT_FILES_KEY = "RecentFiles";
+        private const int MAX_RECENT_URLS = 15;
+        private const string RECENT_URLS_KEY = "RecentUrls";
 
         private readonly EditorService _editorService;
         private readonly SettingsService _settingsService;
@@ -671,6 +673,45 @@ namespace ClarionMarkdownEditor
             SaveRecentFiles(files);
         }
 
+        private List<string> GetRecentUrls()
+        {
+            var stored = _settingsService.Get(RECENT_URLS_KEY);
+            if (string.IsNullOrEmpty(stored)) return new List<string>();
+
+            return stored.Split('|')
+                .Where(u => !string.IsNullOrEmpty(u))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+
+        private void SaveRecentUrls(List<string> urls)
+        {
+            _settingsService.Set(RECENT_URLS_KEY, string.Join("|", urls));
+        }
+
+        private void AddToRecentUrls(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+            url = url.Trim();
+
+            var urls = GetRecentUrls();
+            urls.RemoveAll(u => string.Equals(u, url, StringComparison.OrdinalIgnoreCase));
+            urls.Insert(0, url);
+            if (urls.Count > MAX_RECENT_URLS)
+                urls = urls.Take(MAX_RECENT_URLS).ToList();
+            SaveRecentUrls(urls);
+            _ = RefreshRecentUrlsInStartPage();
+        }
+
+        private void RemoveRecentUrlByIndex(int index)
+        {
+            var urls = GetRecentUrls();
+            if (index < 0 || index >= urls.Count) return;
+            urls.RemoveAt(index);
+            SaveRecentUrls(urls);
+            _ = RefreshRecentUrlsInStartPage();
+        }
+
         public void LoadFile(string filePath)
         {
             if (!_isWebView2Ready)
@@ -744,6 +785,10 @@ namespace ClarionMarkdownEditor
             _currentFilePath = null;
 
             AddTabToJs(tabId, tabName, result.Content ?? string.Empty, null, isReadOnly: true, baseUrl: baseUrl);
+
+            // Keep the user's original URL on the recent list (not the resolved
+            // one) so probe + fallback behaviour replays the next time too.
+            AddToRecentUrls(url);
         }
 
         private static string DeriveTabNameFromUrl(string url)
@@ -1498,6 +1543,30 @@ namespace ClarionMarkdownEditor
                                 case "removeMissingFiles":
                                     RemoveMissingRecentFiles();
                                     break;
+
+                                case "openUrl":
+                                    BeginInvoke(new Action(() =>
+                                    {
+                                        var entered = UrlPromptDialog.Show(FindForm());
+                                        if (!string.IsNullOrWhiteSpace(entered))
+                                            _ = LoadUrlAsync(entered);
+                                    }));
+                                    break;
+
+                                case "openRecentUrl":
+                                    var recentUrl = ExtractNestedJsonValue(message, "data", "url");
+                                    if (!string.IsNullOrEmpty(recentUrl))
+                                    {
+                                        var u = recentUrl;
+                                        BeginInvoke(new Action(() => _ = LoadUrlAsync(u)));
+                                    }
+                                    break;
+
+                                case "removeRecentUrl":
+                                    var urlIndexStr = ExtractNestedJsonValue(message, "data", "index");
+                                    if (int.TryParse(urlIndexStr, out int urlIndex))
+                                        RemoveRecentUrlByIndex(urlIndex);
+                                    break;
                             }
                         }
                         break;
@@ -1819,11 +1888,29 @@ namespace ClarionMarkdownEditor
                     await webView.ExecuteScriptAsync("addStartPageTab()");
                     _activeTabId = "startPage";
                     await RefreshRecentFilesInStartPage();
+                    await RefreshRecentUrlsInStartPage();
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"ShowStartPage error: {ex.Message}");
                 }
+            }
+        }
+
+        private async Task RefreshRecentUrlsInStartPage()
+        {
+            if (!_isWebView2Ready) return;
+            try
+            {
+                var urls = GetRecentUrls();
+                var jsonItems = urls.Select(u =>
+                    $"{{\"url\":\"{EscapeJsString(u)}\",\"name\":\"{EscapeJsString(DeriveTabNameFromUrl(u))}\"}}");
+                var jsonArray = "[" + string.Join(",", jsonItems) + "]";
+                await webView.ExecuteScriptAsync($"populateRecentUrls({jsonArray})");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"RefreshRecentUrlsInStartPage error: {ex.Message}");
             }
         }
 
