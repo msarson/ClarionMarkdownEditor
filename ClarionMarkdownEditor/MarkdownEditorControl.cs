@@ -18,6 +18,17 @@ namespace ClarionMarkdownEditor
         public string FilePath { get; set; }
         public string FileName { get; set; }
         public bool IsDirty { get; set; }
+
+        // Set when the tab was loaded from a URL (Open Markdown from URL...). Carries the
+        // resolved fetch URL so relative-link clicks and "Save a copy" can resolve correctly.
+        public string SourceUrl { get; set; }
+
+        // BaseUrl (directory part of SourceUrl, ending in "/") for resolving relative
+        // image/link URLs inside the Markdown.
+        public string SourceBaseUrl { get; set; }
+
+        // True for URL-loaded tabs until "Save a copy locally..." makes them a real file.
+        public bool IsReadOnly { get; set; }
     }
 
     /// <summary>
@@ -47,6 +58,7 @@ namespace ClarionMarkdownEditor
         private bool _isWebView2Ready = false;
         private bool _initializationStarted = false;
         private string _pendingFilePath = null;
+        private string _pendingUrl = null;
         private bool _isDarkMode = false;
 
         // Tab tracking fields
@@ -198,6 +210,12 @@ namespace ClarionMarkdownEditor
                                 var path = _pendingFilePath;
                                 _pendingFilePath = null;
                                 OpenFile(path);
+                            }
+                            else if (!string.IsNullOrEmpty(_pendingUrl))
+                            {
+                                var url = _pendingUrl;
+                                _pendingUrl = null;
+                                _ = LoadUrlAsync(url);
                             }
                             else
                             {
@@ -661,6 +679,104 @@ namespace ClarionMarkdownEditor
                 return;
             }
             OpenFile(filePath);
+        }
+
+        /// <summary>
+        /// Loads a Markdown document from a URL into a new read-only tab.
+        /// Defers if WebView2 isn't ready yet; the post-init handler replays.
+        /// </summary>
+        public async Task LoadUrlAsync(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return;
+
+            if (!_isWebView2Ready)
+            {
+                _pendingUrl = url;
+                return;
+            }
+
+            UrlNormalizer.NormalizedUrl normalized;
+            try
+            {
+                normalized = UrlNormalizer.Normalize(url);
+            }
+            catch (ArgumentException ex)
+            {
+                MessageBox.Show(
+                    "Invalid URL: " + ex.Message,
+                    "Open Markdown from URL",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var result = await MarkdownUrlCache.GetOrFetchAsync(normalized).ConfigureAwait(true);
+
+            if (!result.Success)
+            {
+                MessageBox.Show(
+                    $"Couldn't load:\n{url}\n\n{result.ErrorMessage ?? "Unknown error"}",
+                    "Open Markdown from URL",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var resolvedUrl = result.ResolvedUrl ?? normalized.PrimaryUrl;
+            var baseUrl = !string.IsNullOrEmpty(normalized.BaseUrl)
+                ? normalized.BaseUrl
+                : DeriveBaseUrlFromResolved(resolvedUrl);
+            var tabName = DeriveTabNameFromUrl(resolvedUrl);
+            if (result.IsStale) tabName += " (offline)";
+
+            var tabId = GenerateTabId();
+            var tab = new FileTab
+            {
+                Id = tabId,
+                FilePath = null,
+                FileName = tabName,
+                IsDirty = false,
+                SourceUrl = resolvedUrl,
+                SourceBaseUrl = baseUrl,
+                IsReadOnly = true
+            };
+
+            _openTabs[tabId] = tab;
+            _activeTabId = tabId;
+            _currentFilePath = null;
+
+            AddTabToJs(tabId, tabName, result.Content ?? string.Empty, null);
+        }
+
+        private static string DeriveTabNameFromUrl(string url)
+        {
+            try
+            {
+                var uri = new Uri(url);
+                var segs = uri.AbsolutePath.Trim('/').Split('/');
+                var file = segs.Length > 0 && segs[segs.Length - 1].Length > 0
+                    ? segs[segs.Length - 1]
+                    : "document.md";
+
+                if (uri.Host.Equals("raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase)
+                    && segs.Length >= 4)
+                {
+                    return $"{file} ({segs[0]}/{segs[1]})";
+                }
+                return file;
+            }
+            catch
+            {
+                return "Untitled URL";
+            }
+        }
+
+        private static string DeriveBaseUrlFromResolved(string url)
+        {
+            int q = url.IndexOf('?');
+            if (q >= 0) url = url.Substring(0, q);
+            int h = url.IndexOf('#');
+            if (h >= 0) url = url.Substring(0, h);
+            int slash = url.LastIndexOf('/');
+            return slash > 8 ? url.Substring(0, slash + 1) : url;
         }
 
         /// <summary>
