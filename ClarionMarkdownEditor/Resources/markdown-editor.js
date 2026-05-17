@@ -68,7 +68,8 @@
                     // Headers
                     if (line.match(/^#{1,6}\s/)) {
                         var level = line.match(/^#+/)[0].length;
-                        var text = line.replace(/^#+\s*/, '');
+                        // Strip leading #s and optional CommonMark closing #s (must be preceded by whitespace)
+                        var text = line.replace(/^#+\s*/, '').replace(/\s+#+\s*$/, '');
                         out += '<h' + level + '>' + inline(text) + '</h' + level + '>\n';
                         continue;
                     }
