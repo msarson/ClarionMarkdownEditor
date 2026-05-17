@@ -10,6 +10,21 @@ Contributors:
 
 --- 
 
+## v1.1.2 — 2026-05-17 — Strip trailing `#` on ATX headings
+
+### Fixed
+- **Trailing `#` characters on ATX headings were not removed in the preview**
+  ([#3](https://github.com/msarson/ClarionMarkdownEditor/issues/3), reported by
+  Pierre-Jean Quinto). The inline markdown parser stripped the leading `#`s
+  but left the optional closing `#` sequence in the rendered text, so
+  `# Introduction #` rendered as `Introduction #` instead of `Introduction`.
+  Per [CommonMark §4.2](https://spec.commonmark.org/0.31.2/#atx-headings), the
+  closing `#` sequence — when preceded by whitespace — is decorative and must
+  be stripped. Added a second `.replace(/\s+#+\s*$/, '')` to the heading text
+  extraction in `markdown-editor.js`.
+
+---
+
 ## v1.1.1 — 2026-05-15 — Fix format toolbar visible after Start Page → URL tab
 
 ### Fixed
