@@ -15,131 +15,29 @@
             });
         }
 
-        // Minimal marked.js implementation for markdown parsing
-        var marked = (function() {
-            function escape(html) {
-                return html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-            }
-
-            function parse(src) {
-                var out = '';
-                var lines = src.split('\n');
-                var inCode = false, inList = false, listType = '';
-                var codeBlock = '', codeLanguage = '', codeFence = '';
-
-                for (var i = 0; i < lines.length; i++) {
-                    var line = lines[i];
-
-                    // Fenced code blocks (support 3+ backticks at any indentation)
-                    var codeMatch = line.match(/^(\s*)(```+)(\w*)/);
-                    if (codeMatch) {
-                        var fence = codeMatch[2]; // Get the backticks (```, ````, etc.)
-                        if (!inCode) {
-                            inCode = true;
-                            codeFence = fence; // Remember how many backticks opened it
-                            codeLanguage = codeMatch[3]; // Get language from match
-                            codeBlock = '';
-                        } else if (fence === codeFence) {
-                            // Only close if same number of backticks
-                            // Check for mermaid diagrams
-                            if (codeLanguage === 'mermaid') {
-                                out += '<div class="mermaid">' + escape(codeBlock.slice(0,-1)) + '</div>\n';
-                            } else {
-                                out += '<pre><code class="' + (codeLanguage ? 'language-' + codeLanguage : '') + '">' + escape(codeBlock.slice(0,-1)) + '</code></pre>\n';
-                            }
-                            inCode = false;
-                            codeBlock = '';
-                            codeLanguage = '';
-                            codeFence = '';
-                        } else {
-                            // Different number of backticks - treat as content
-                            codeBlock += line + '\n';
+        // Configure marked@11 (loaded from the bundled marked.min.js).
+        // - gfm: enable GitHub-flavored extensions (tables, task lists, strikethrough, autolinks)
+        // - breaks: false — CommonMark behavior; a lone newline is whitespace, not <br>
+        // - code renderer override: map ```mermaid fences to <div class="mermaid">…</div>
+        //   so the existing mermaid.run() post-processing in updatePreview() keeps working
+        //   unchanged. marked@11 calls renderer.code(text, lang, escaped) positionally
+        //   (verified in marked.min.js source — not the token-object form some docs imply).
+        //   Returning false from any other branch falls through to marked's default
+        //   <pre><code class="language-…"> output that highlight.js then picks up.
+        if (typeof marked !== 'undefined') {
+            marked.use({
+                gfm: true,
+                breaks: false,
+                renderer: {
+                    code: function(code, lang) {
+                        if (lang === 'mermaid') {
+                            return '<div class="mermaid">' + escapeHtml(code) + '</div>\n';
                         }
-                        continue;
-                    }
-                    if (inCode) { codeBlock += line + '\n'; continue; }
-
-                    // Close list if empty line
-                    if (inList && line.trim() === '') {
-                        out += '</' + listType + '>\n';
-                        inList = false;
-                    }
-
-                    // Headers
-                    if (line.match(/^#{1,6}\s/)) {
-                        var level = line.match(/^#+/)[0].length;
-                        // Strip leading #s and optional CommonMark closing #s (must be preceded by whitespace)
-                        var text = line.replace(/^#+\s*/, '').replace(/\s+#+\s*$/, '');
-                        out += '<h' + level + '>' + inline(text) + '</h' + level + '>\n';
-                        continue;
-                    }
-
-                    // Horizontal rule
-                    if (line.match(/^(-{3,}|\*{3,}|_{3,})$/)) {
-                        out += '<hr>\n';
-                        continue;
-                    }
-
-                    // Blockquote
-                    if (line.match(/^>\s?/)) {
-                        out += '<blockquote>' + inline(line.replace(/^>\s?/, '')) + '</blockquote>\n';
-                        continue;
-                    }
-
-                    // Unordered list
-                    if (line.match(/^[\*\-\+]\s/)) {
-                        if (!inList || listType !== 'ul') {
-                            if (inList) out += '</' + listType + '>\n';
-                            out += '<ul>\n';
-                            inList = true;
-                            listType = 'ul';
-                        }
-                        out += '<li>' + inline(line.replace(/^[\*\-\+]\s/, '')) + '</li>\n';
-                        continue;
-                    }
-
-                    // Ordered list
-                    if (line.match(/^\d+\.\s/)) {
-                        if (!inList || listType !== 'ol') {
-                            if (inList) out += '</' + listType + '>\n';
-                            out += '<ol>\n';
-                            inList = true;
-                            listType = 'ol';
-                        }
-                        out += '<li>' + inline(line.replace(/^\d+\.\s/, '')) + '</li>\n';
-                        continue;
-                    }
-
-                    // Paragraph
-                    if (line.trim() !== '') {
-                        out += '<p>' + inline(line) + '</p>\n';
+                        return false;
                     }
                 }
-
-                if (inCode) out += '<pre><code>' + escape(codeBlock) + '</code></pre>\n';
-                if (inList) out += '</' + listType + '>\n';
-
-                return out;
-            }
-
-            function inline(text) {
-                // Images
-                text = text.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1">');
-                // Links
-                text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
-                // Bold
-                text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-                text = text.replace(/__([^_]+)__/g, '<strong>$1</strong>');
-                // Italic
-                text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-                text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
-                // Inline code
-                text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-                return text;
-            }
-
-            return { parse: parse };
-        })();
+            });
+        }
 
         var editor = document.getElementById('editor');
         var preview = document.getElementById('preview');
@@ -513,7 +411,8 @@
                 // Update preview without triggering dirty
                 preview.innerHTML = marked.parse(content);
                 if (typeof hljs !== 'undefined') {
-                    var blocks = preview.querySelectorAll('pre code');
+                    // Only highlight blocks with an explicit language class — skip hljs auto-detection on no-language fences
+                var blocks = preview.querySelectorAll('pre code[class*="language-"]');
                     blocks.forEach(function(block) {
                         block.removeAttribute('data-highlighted');
                         try { hljs.highlightElement(block); } catch (err) {}
@@ -1032,7 +931,8 @@
             // Apply syntax highlighting to all code blocks
             var statusMsg = 'Ready';
             if (typeof hljs !== 'undefined') {
-                var blocks = preview.querySelectorAll('pre code');
+                // Only highlight blocks with an explicit language class — skip hljs auto-detection on no-language fences
+                var blocks = preview.querySelectorAll('pre code[class*="language-"]');
                 if (blocks.length > 0) {
                     blocks.forEach(function(block) {
                         // Remove any existing highlighting
@@ -1183,7 +1083,8 @@
 
             // Apply syntax highlighting
             if (typeof hljs !== 'undefined') {
-                var blocks = preview.querySelectorAll('pre code');
+                // Only highlight blocks with an explicit language class — skip hljs auto-detection on no-language fences
+                var blocks = preview.querySelectorAll('pre code[class*="language-"]');
                 blocks.forEach(function(block) {
                     block.removeAttribute('data-highlighted');
                     try { hljs.highlightElement(block); } catch (err) {}

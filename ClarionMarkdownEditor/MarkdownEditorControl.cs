@@ -187,7 +187,7 @@ namespace ClarionMarkdownEditor
                 if (File.Exists(htmlPath))
                 {
                     var html = File.ReadAllText(htmlPath);
-                    html = InjectHighlightJs(html);
+                    html = InjectScripts(html);
                     
                     // Write modified HTML to temp location
                     _tempHtmlPath = Path.Combine(resourcesPath, "markdown-editor-temp.html");
@@ -340,7 +340,7 @@ namespace ClarionMarkdownEditor
             }
         }
 
-        private string InjectHighlightJs(string html)
+        private string InjectScripts(string html)
         {
             var injectionLog = "INJECTION DEBUG: ";
             try
@@ -348,7 +348,20 @@ namespace ClarionMarkdownEditor
                 // Get the directory where the addin is deployed
                 var addinDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 injectionLog += $"addinDir={addinDir}; ";
-                
+
+                // Load marked (markdown parser)
+                var markedPath = Path.Combine(addinDir, "Resources", "marked.min.js");
+                if (File.Exists(markedPath))
+                {
+                    var marked = File.ReadAllText(markedPath);
+                    html = html.Replace("<!-- INJECT_MARKED_JS -->", $"<script>\n{marked}\n    </script>");
+                    injectionLog += "marked injected; ";
+                }
+                else
+                {
+                    injectionLog += "marked NOT FOUND; ";
+                }
+
                 // Load highlight.js CSS
                 var cssPath = Path.Combine(addinDir, "Resources", "atom-one-dark.min.css");
                 injectionLog += $"cssPath={cssPath}; ";
@@ -362,7 +375,7 @@ namespace ClarionMarkdownEditor
                 {
                     injectionLog += "CSS NOT FOUND; ";
                 }
-                
+
                 // Load highlight.js JavaScript
                 var jsPath = Path.Combine(addinDir, "Resources", "highlight.min.js");
                 injectionLog += $"jsPath={jsPath}; ";
@@ -378,7 +391,7 @@ namespace ClarionMarkdownEditor
                 {
                     injectionLog += "JS NOT FOUND; ";
                 }
-                
+
                 // Inject Clarion language definition
                 var clarionLang = GetClarionLanguageDefinition();
                 html = html.Replace("<!-- INJECT_CLARION_LANG -->", $"<script>\n{clarionLang}\n    </script>");

@@ -116,6 +116,7 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
    - `Resources\markdown-editor.html`
    - `Resources\markdown-editor.css`
    - `Resources\markdown-editor.js`
+   - `Resources\marked.min.js`
    - `Resources\highlight.min.js`
    - `Resources\atom-one-dark.min.css`
 3. **Unblock the DLLs** — Windows tags files extracted from a downloaded zip with
@@ -172,6 +173,7 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
    - `Resources\markdown-editor.html`
    - `Resources\markdown-editor.css`
    - `Resources\markdown-editor.js`
+   - `Resources\marked.min.js`
    - `Resources\highlight.min.js`
    - `Resources\atom-one-dark.min.css`
 
@@ -290,6 +292,7 @@ MarkDownAddin/
         ├── markdown-editor.html         # HTML structure (UI skeleton)
         ├── markdown-editor.css          # All editor styles (light/dark/layout)
         ├── markdown-editor.js           # All editor behaviour (tabs, preview, dirty tracking)
+        ├── marked.min.js                # marked.js markdown parser (bundled, MIT)
         ├── highlight.min.js             # Highlight.js syntax highlighting library
         └── atom-one-dark.min.css        # Highlight.js theme
 ```
@@ -301,7 +304,7 @@ MarkDownAddin/
 - **UI Layer**: HTML/CSS/JavaScript in WebView2 (Chromium-based)
 - **Modern Browser Engine**: WebView2 provides full modern web standards support
 - **Native Toolbar**: WinForms ToolStrip for file operations
-- **Markdown Parser**: Custom lightweight parser implemented in JavaScript
+- **Markdown Parser**: [marked.js](https://github.com/markedjs/marked) 11.2.0 — CommonMark + GFM (tables, task lists, strikethrough, autolinks)
 - **Syntax Highlighting**: Highlight.js 11.9.0 with custom Clarion language definition
 - **IDE Integration**: Uses reflection for compatibility across Clarion IDE versions
 
@@ -314,13 +317,23 @@ Migrated from old IE-based WebBrowser to WebView2 (Chromium) to enable:
 - Better performance and security
 - Syntax highlighting with Highlight.js
 
+### Markdown Parsing
+
+- **Library**: [marked.js](https://github.com/markedjs/marked) 11.2.0 (MIT License)
+- **Features**: CommonMark-compliant, with GFM extensions enabled (`gfm: true`) for tables, task lists, strikethrough, and autolinks
+- **Line breaks**: `breaks: false` — a lone newline is treated as whitespace per CommonMark, not a `<br>`
+- **Mermaid integration**: a renderer override maps ` ```mermaid ` code fences to `<div class="mermaid">…</div>` so the existing mermaid rendering pass continues to work
+- **Injection**: C#-based file injection (no CDN dependency, works offline)
+- **File**: `marked.min.js` (~35 KB)
+
 ### Syntax Highlighting Implementation
 
-- **Library**: Highlight.js 11.9.0
+- **Library**: [Highlight.js](https://github.com/highlightjs/highlight.js) 11.9.0 (BSD-3-Clause License)
 - **Theme**: Atom One Dark
 - **Injection**: C#-based file injection (no CDN dependencies, works offline)
 - **Custom Language**: Full Clarion language definition from [discourse-highlightjs-clarion](https://github.com/msarson/discourse-highlightjs-clarion)
 - **Files**: `highlight.min.js` (121KB) and `atom-one-dark.min.css` (856 bytes)
+- **Auto-detection suppressed for no-language fences**: only code blocks with an explicit `language-…` class get highlighted, so untagged fences render as plain monospace
 
 ### Settings Storage
 
@@ -396,8 +409,17 @@ From an idea by **Dinko Bakun**
 
 ## Acknowledgments
 
+This project bundles or depends on the following open source libraries — many thanks to the authors and maintainers of each:
+
+- **[marked.js](https://github.com/markedjs/marked)** by Christopher Jeffrey and contributors (MIT License) — markdown → HTML parser
+- **[Highlight.js](https://github.com/highlightjs/highlight.js)** by Ivan Sagalaev and contributors (BSD-3-Clause License) — code syntax highlighting
+- **[Mermaid](https://github.com/mermaid-js/mermaid)** by Knut Sveidqvist and contributors (MIT License) — diagrams and flowcharts from text
+- **[WebView2](https://learn.microsoft.com/microsoft-edge/webview2/)** by Microsoft — embedded Chromium runtime
+- Custom Clarion syntax highlighting from [discourse-highlightjs-clarion](https://github.com/msarson/discourse-highlightjs-clarion)
+
+Other inspirations and thanks:
+
 - Built for the Clarion IDE (SharpDevelop-based)
 - Inspired by popular markdown editors like Typora and Mark Text
-- Custom Clarion syntax highlighting from [discourse-highlightjs-clarion](https://github.com/msarson/discourse-highlightjs-clarion)
-- [ClarionLive](https://www.clarionlive.com) - Clarion developer community
+- [ClarionLive](https://www.clarionlive.com) — Clarion developer community
 
