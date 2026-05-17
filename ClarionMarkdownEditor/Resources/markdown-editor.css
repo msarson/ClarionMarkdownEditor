@@ -238,6 +238,7 @@
         body.dark-mode .preview-content h1, body.dark-mode .preview-content h2 { border-bottom-color: #3e3e3e; }
         body.dark-mode .preview-content code { background: #2d2d2d; color: #d4d4d4; }
         body.dark-mode .preview-content pre { background: #0d0d0d; color: #d4d4d4; }
+        body.dark-mode .preview-content pre code { background: none; color: inherit; }
         body.dark-mode .preview-content blockquote { border-left-color: #555; background: #252525; color: #aaa; }
         body.dark-mode .preview-content table th, body.dark-mode .preview-content table td { border-color: #3e3e3e; }
         body.dark-mode .preview-content table th { background: #252525; }
