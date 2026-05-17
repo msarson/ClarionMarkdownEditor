@@ -10,6 +10,32 @@ Contributors:
 
 --- 
 
+## v1.2.0 — 2026-05-17 — Bundle marked@11, drop inline parser
+
+### Changed
+- **Markdown preview is now powered by [marked.js](https://github.com/markedjs/marked) 11.2.0** ([#8](https://github.com/msarson/ClarionMarkdownEditor/issues/8)). The inline ~120-line minimal parser that was shadowing the CDN-loaded `marked` has been removed entirely, and `marked.min.js` is now bundled locally under `Resources/` (no CDN dependency, works offline). The C# injector previously named `InjectHighlightJs` has been renamed `InjectScripts` and now bundles marked alongside highlight.js and the Clarion language definition.
+- **Configuration**: `gfm: true` (GitHub-flavored extensions on), `breaks: false` (CommonMark behavior — a lone newline is whitespace, not `<br>`).
+- **Mermaid rendering** is preserved via a `code` renderer override that maps ` ```mermaid ` fences to `<div class="mermaid">…</div>` so the existing `mermaid.run()` post-processing continues to fire unchanged.
+
+### Added (features that previously rendered as plain text or broken markup)
+- **GFM tables** — pipe syntax with header divider
+- **Task lists** — `- [ ]` / `- [x]` rendered as checkboxes
+- **Strikethrough** — `~~text~~` renders as `<del>`
+- **Autolinks** — bare URLs and `<https://...>` syntax both linkified
+- **Hard line breaks** — two trailing spaces before a newline render as `<br>`
+- **Escaped characters** — `\*`, `\#`, etc. render as the literal character
+- **Inline HTML passthrough** — `<style>`, `<span>`, etc. now reach the DOM (CommonMark compliant)
+- **Reference-style links**, **setext headings**, **nested lists**, and other CommonMark features the inline parser silently dropped
+
+### Fixed
+- **No-language fenced code blocks now render as plain monospace.** Previously `hljs.highlightElement` auto-detected a language and applied speculative syntax tinting to untagged fences. The post-processing selector now matches `pre code[class*="language-"]` only.
+- **Dark-mode CSS bug exposed by clean code-block testing**: `body.dark-mode .preview-content code` was winning over `.preview-content pre code` on specificity, giving the inner `<code>` inside a `<pre>` a different background to its parent. Added an explicit `body.dark-mode .preview-content pre code { background: none; color: inherit; }` rule.
+
+### Acknowledgments
+Many thanks to Christopher Jeffrey and the [marked.js](https://github.com/markedjs/marked) contributors, and Knut Sveidqvist and the [Mermaid](https://github.com/mermaid-js/mermaid) contributors, whose open source work makes the preview pane possible.
+
+---
+
 ## v1.1.2 — 2026-05-17 — Strip trailing `#` on ATX headings
 
 ### Fixed
