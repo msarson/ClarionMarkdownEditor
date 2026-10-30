@@ -54,12 +54,12 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 - **About Dialog**: View credits and project information (File > About)
 - **IDE Integration**: Insert markdown content directly into the active Clarion editor
 - **Keyboard Shortcuts**:
-  - `Ctrl+Alt+M` - Open Markdown Editor pad
+  - `Ctrl+Alt+M` - Open the Markdown Editor
   - `Ctrl+S` - Save current document
   - `Ctrl+B` - Bold
   - `Ctrl+I` - Italic
   - All formatting shortcuts support **undo** (Ctrl+Z)
-- **Dockable Pad**: Can be docked anywhere in the Clarion IDE workspace
+- **Dockable**: Opens as a document tab that can be dragged to sit beside your source files or floated onto another monitor
 - **File Type Handler**: Opening a `.md` or `.markdown` file in the IDE automatically opens it in the Markdown Editor — all files share a single editor instance with internal tabs
 - **Remembers Settings**: Last opened folder and dark mode preference saved between sessions
 - **Dirty Indicator**: The editor tab shows `*` when a document has unsaved changes — clears automatically when changes are undone back to the last-saved state
@@ -228,17 +228,13 @@ The version is set in one place: `<Version>` in `ClarionMarkdownEditor\ClarionMa
 
 ### Opening the Editor
 
-The Markdown Editor can be opened in two different modes:
-
-#### Dockable Pad Mode (Default)
 - **Keyboard**: Press `Ctrl+Alt+M`
-- **Menu**: Go to `Tools → Markdown Editor (Pad)`
-- Opens as a dockable tool window that can be positioned on any side of the IDE
+- **Menu**: Go to `Tools → Markdown Editor`
+- **File**: Open any `.md` / `.markdown` file in the IDE
 
-#### Document Window Mode
-- **Menu**: Go to `Tools → Markdown Editor (Window)`
-- Opens in the main document area alongside your source code files
-- Useful when you want to work on markdown files like regular documents
+The editor opens as a single document tab holding all your Markdown files as internal tabs. Like any document tab it can be dragged to sit beside your source code or floated onto another monitor.
+
+> Earlier versions also had a separate **Markdown Editor (Pad)**. It was removed in v1.4.1 because the document tab can be docked the same way; if you had the pad docked, drag the document tab to that spot instead.
 
 ### Editing Markdown
 
@@ -288,12 +284,10 @@ MarkDownAddin/
     ├── Directory.Build.props            # Clarion path config (ClarionBin variable)
     ├── Properties/
     │   └── AssemblyInfo.cs
-    ├── MarkdownEditorPad.cs             # Dockable pad container
     ├── MarkdownEditorViewContent.cs     # Document window container
     ├── MarkdownEditorControl.cs         # Main control with WebBrowser
     ├── MarkdownEditorControl.Designer.cs
-    ├── ShowMarkdownEditorCommand.cs     # Tools menu command (Pad mode)
-    ├── ShowMarkdownEditorWindowCommand.cs # Tools menu command (Window mode)
+    ├── ShowMarkdownEditorWindowCommand.cs # Tools menu command
     ├── Services/
     │   ├── EditorService.cs             # IDE editor interaction
     │   ├── SettingsService.cs           # User settings persistence
@@ -367,7 +361,7 @@ var t = Type.GetType("ClarionMarkdownEditor.MarkdownEditorApi, ClarionMarkdownEd
 t?.GetMethod("OpenUrl")?.Invoke(null, new object[] { url });
 ```
 
-`MarkdownEditorApi.OpenUrl(string url)` ensures the editor pad is
+`MarkdownEditorApi.OpenUrl(string url)` ensures the editor window is
 visible, fetches the document (with cache + offline fallback), and
 opens it in a new read-only tab. Errors surface as in-editor message
 boxes — the call itself is fire-and-forget and never throws back to

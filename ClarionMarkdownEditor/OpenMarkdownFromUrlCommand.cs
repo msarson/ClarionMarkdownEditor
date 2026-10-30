@@ -7,7 +7,7 @@ namespace ClarionMarkdownEditor
 {
     /// <summary>
     /// Tools menu command: prompt for a URL and open the resulting Markdown
-    /// in the editor pad. Thin wrapper around MarkdownEditorApi.OpenUrl.
+    /// in the editor window. Thin wrapper around MarkdownEditorApi.OpenUrl.
     /// </summary>
     public class OpenMarkdownFromUrlCommand : AbstractMenuCommand
     {

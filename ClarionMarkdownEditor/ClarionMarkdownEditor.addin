@@ -16,14 +16,9 @@
                     fileNamePattern=".*\.(md|markdown)$"
                     type="Primary"/>
   </Path>
-  <Path name="/SharpDevelop/Workbench/Pads">
-    <Pad id="MarkdownEditor" category="Tools" title="Markdown Editor (Pad)"
-         icon="ClarionMarkdownEditor.MarkdownEditorIcon" shortcut="Control|Alt|M"
-         class="ClarionMarkdownEditor.MarkdownEditorPad"/>
-  </Path>
   <Path name="/SharpDevelop/Workbench/MainMenu/View/Tools">
-    <MenuItem id="ShowMarkdownEditorWindow" label="Markdown Editor (Window)"
-              icon="ClarionMarkdownEditor.MarkdownEditorIcon"
+    <MenuItem id="ShowMarkdownEditorWindow" label="Markdown Editor"
+              icon="ClarionMarkdownEditor.MarkdownEditorIcon" shortcut="Control|Alt|M"
               class="ClarionMarkdownEditor.ShowMarkdownEditorWindowCommand"/>
     <MenuItem id="OpenMarkdownFromUrl" label="Open Markdown from URL..."
               icon="ClarionMarkdownEditor.MarkdownEditorIcon"
