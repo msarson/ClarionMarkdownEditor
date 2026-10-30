@@ -578,10 +578,19 @@
             display: none;
         }
         .start-page-version {
-            margin-top: 24px;
-            text-align: center;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            padding: 2px 10px;
+            font-weight: normal;
+            border: 1px solid #ddd;
+            border-radius: 10px;
             font-size: 12px;
-            color: #888;
+            color: #636e72;
+        }
+        body.dark-mode .start-page-version {
+            border-color: #444;
+            color: #999;
         }
         .about-modal .credits {
             margin: 15px 0;
