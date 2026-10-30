@@ -561,6 +561,28 @@
             font-size: 24px;
             color: #333;
         }
+        .about-modal .version {
+            margin: -12px 0 4px 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #0066cc;
+        }
+        .about-modal .install-path {
+            font-size: 11px;
+            color: #888;
+            word-break: break-all;
+        }
+        .about-modal .version:empty,
+        .about-modal .install-path:empty,
+        .start-page-version:empty {
+            display: none;
+        }
+        .start-page-version {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
         .about-modal .credits {
             margin: 15px 0;
             line-height: 1.8;
@@ -603,6 +625,9 @@
         }
         body.dark-mode .about-modal h1 {
             color: #e0e0e0;
+        }
+        body.dark-mode .about-modal .version {
+            color: #5599dd;
         }
         body.dark-mode .about-modal .credits {
             color: #bbb;

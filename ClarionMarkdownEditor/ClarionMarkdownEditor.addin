@@ -1,5 +1,6 @@
 <AddIn name="Markdown Editor" author="John Hickey" description="Markdown file viewer and editor for Clarion IDE">
   <Manifest>
+    <!-- version is overwritten at build time from <Version> in ClarionMarkdownEditor.csproj -->
     <Identity name="ClarionMarkdownEditor" version="1.4.0"/>
   </Manifest>
   <Runtime>

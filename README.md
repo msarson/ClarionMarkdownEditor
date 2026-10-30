@@ -102,11 +102,17 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
 
 ### From Release
 
+The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAddinFinder), which installs and updates the editor for you. To install by hand:
+
 1. Download the latest release
 2. Copy all files to:
    ```
-   {CLARION_PATH}\accessory\addins\MarkdownEditor\
+   {CLARION_PATH}\accessory\addins\ClarionMarkdownEditor\
    ```
+   > Keep only **one** copy of the editor under `accessory\addins`. Clarion refuses to start if two
+   > folders contain the same addin ("Identity name used by multiple addins"), so remove any older
+   > copy (for example `accessory\addins\MarkdownEditor\`) first. **File → About...** in the editor shows
+   > the running version and the folder it was loaded from.
    Required files:
    - `ClarionMarkdownEditor.dll`
    - `ClarionMarkdownEditor.addin`
@@ -164,7 +170,7 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
 
 4. **Deploy to Clarion**
 
-   Copy from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\MarkdownEditor\`:
+   Copy from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\ClarionMarkdownEditor\`:
    - `ClarionMarkdownEditor.dll`
    - `ClarionMarkdownEditor.addin`
    - `Microsoft.Web.WebView2.Core.dll`
@@ -178,6 +184,10 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
    - `Resources\atom-one-dark.min.css`
 
 5. **Restart Clarion IDE**
+
+### Releasing
+
+The version is set in one place: `<Version>` in `ClarionMarkdownEditor\ClarionMarkdownEditor.csproj`. The build uses it for the DLL's version attributes and stamps it into the `<Identity version>` of the `ClarionMarkdownEditor.addin` copied to the output folder. Always ship the `.addin` from the build output, not the source copy.
 
 ## Screenshots
 ```
