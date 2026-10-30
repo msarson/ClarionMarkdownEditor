@@ -1191,6 +1191,31 @@ namespace ClarionMarkdownEditor
         private void CoreWebView2_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
         {
             var message = e.WebMessageAsJson;
+
+            // Dropped files arrive as CoreWebView2File objects, which are only
+            // readable inside this event, so resolve their paths here.
+            if (ExtractJsonValue(message, "type") == "filesDropped")
+            {
+                var paths = new List<string>();
+                if (e.AdditionalObjects != null)
+                {
+                    foreach (var obj in e.AdditionalObjects)
+                    {
+                        if (obj is Microsoft.Web.WebView2.Core.CoreWebView2File file &&
+                            !string.IsNullOrEmpty(file.Path) && File.Exists(file.Path))
+                        {
+                            paths.Add(file.Path);
+                        }
+                    }
+                }
+                Log($"filesDropped: {paths.Count} file(s)");
+                // Defer out of the WebView2 callback so OpenFile's MessageBox prompts behave
+                // the same as from a menu click
+                if (paths.Count > 0)
+                    BeginInvoke(new Action(() => paths.ForEach(OpenFile)));
+                return;
+            }
+
             HandleWebMessage(message);
         }
 

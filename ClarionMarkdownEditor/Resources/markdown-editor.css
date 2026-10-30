@@ -3,6 +3,16 @@
 
         .container { display: flex; flex-direction: column; height: 100%; background: #f5f5f5; }
 
+        /* Drop target highlight while dragging files in from Explorer */
+        body.file-drag-over::after {
+            content: 'Drop to open';
+            position: fixed; inset: 6px; z-index: 10000; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            border: 3px dashed #0078d4; border-radius: 6px;
+            background: rgba(0, 120, 212, 0.08);
+            color: #0078d4; font-size: 18px; font-weight: 600;
+        }
+
         /* Formatting toolbar */
         .format-toolbar { display: flex; gap: 4px; padding: 4px 8px; background: #e8e8e8; border-bottom: 1px solid #ccc; }
         .format-toolbar button { padding: 3px 8px; border: 1px solid #aaa; background: #fff; cursor: pointer; font-size: 12px; border-radius: 3px; min-width: 28px; }

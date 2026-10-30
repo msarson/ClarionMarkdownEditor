@@ -434,6 +434,55 @@
             }
         });
 
+        // --- File drag/drop from Explorer ---
+        // Without this, WebView2 handles the drop itself and hands the file to the
+        // default external viewer. Intercept file drags only (text drags into the
+        // editor textarea keep their default behaviour) and pass the File objects
+        // to C#, which resolves them to disk paths and opens them in tabs.
+        (function() {
+            var dragDepth = 0;
+
+            function isFileDrag(e) {
+                var types = e.dataTransfer && e.dataTransfer.types;
+                return !!types && Array.prototype.indexOf.call(types, 'Files') !== -1;
+            }
+
+            function clearDropTarget() {
+                dragDepth = 0;
+                document.body.classList.remove('file-drag-over');
+            }
+
+            document.addEventListener('dragenter', function(e) {
+                if (!isFileDrag(e)) return;
+                e.preventDefault();
+                dragDepth++;
+                document.body.classList.add('file-drag-over');
+            });
+
+            document.addEventListener('dragover', function(e) {
+                if (!isFileDrag(e)) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            });
+
+            document.addEventListener('dragleave', function(e) {
+                if (!isFileDrag(e)) return;
+                dragDepth = Math.max(0, dragDepth - 1);
+                if (dragDepth === 0) clearDropTarget();
+            });
+
+            document.addEventListener('drop', function(e) {
+                if (!isFileDrag(e)) return;
+                e.preventDefault();
+                clearDropTarget();
+                var files = e.dataTransfer.files;
+                if (files && files.length > 0 && window.chrome && window.chrome.webview &&
+                    window.chrome.webview.postMessageWithAdditionalObjects) {
+                    window.chrome.webview.postMessageWithAdditionalObjects({ type: 'filesDropped', data: {} }, files);
+                }
+            });
+        })();
+
         // C# notification helpers
         function notifyTabSwitched(tabId) {
             if (window.chrome && window.chrome.webview) {
