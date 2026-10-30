@@ -18,7 +18,7 @@
   </Path>
   <Path name="/SharpDevelop/Workbench/MainMenu/View/Tools">
     <MenuItem id="ShowMarkdownEditorWindow" label="Markdown Editor"
-              icon="ClarionMarkdownEditor.MarkdownEditorIcon" shortcut="Control|Alt|M"
+              icon="ClarionMarkdownEditor.MarkdownEditorIcon" shortcut="Control|Shift|K"
               class="ClarionMarkdownEditor.ShowMarkdownEditorWindowCommand"/>
     <MenuItem id="OpenMarkdownFromUrl" label="Open Markdown from URL..."
               icon="ClarionMarkdownEditor.MarkdownEditorIcon"
