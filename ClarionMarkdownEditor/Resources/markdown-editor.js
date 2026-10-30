@@ -529,11 +529,13 @@
         // Called from C# once the page has loaded: the running addin version (from the
         // installed .addin manifest) and the folder it was loaded from
         function setAddinInfo(version, installFolder) {
-            var label = version ? 'Version ' + version : '';
-            ['aboutVersion', 'startPageVersion'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.textContent = label;
-            });
+            var aboutEl = document.getElementById('aboutVersion');
+            if (aboutEl) aboutEl.textContent = version ? 'Version ' + version : '';
+            var startEl = document.getElementById('startPageVersion');
+            if (startEl) {
+                startEl.textContent = version ? 'v' + version : '';
+                startEl.title = installFolder || '';
+            }
             var pathEl = document.getElementById('aboutInstallPath');
             if (pathEl) {
                 pathEl.textContent = installFolder || '';
