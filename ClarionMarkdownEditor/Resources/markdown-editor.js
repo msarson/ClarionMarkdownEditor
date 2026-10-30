@@ -799,6 +799,7 @@
                 var itemEl = document.createElement('div');
                 itemEl.className = 'recent-file-item';
                 itemEl.setAttribute('data-file-path', file.path);
+                itemEl.title = file.path;
 
                 var existsClass = file.exists ? '' : ' style="opacity: 0.5;"';
 
@@ -920,6 +921,7 @@
                 var itemEl = document.createElement('div');
                 itemEl.className = 'recent-file-item';
                 itemEl.setAttribute('data-url', item.url);
+                itemEl.title = item.url;
 
                 itemEl.innerHTML =
                     '<div class="recent-file-info">' +
@@ -1293,7 +1295,7 @@
             // Update button text
             var btn = document.getElementById('darkModeBtn');
             if (btn) {
-                btn.textContent = isDark ? '☀️ Light Mode' : '🌓 Dark Mode';
+                btn.textContent = isDark ? '☀️ Light' : '🌓 Dark';
             }
 
             // Notify C# so _isDarkMode and View menu stay in sync
