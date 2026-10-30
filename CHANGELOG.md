@@ -10,6 +10,31 @@ Contributors:
 
 --- 
 
+## v1.5.0 — 2026-10-30 — Version display, compact Start Page, pad removed
+
+### Added
+- **The running version is now visible** ([#13](https://github.com/msarson/ClarionMarkdownEditor/issues/13), requested by Kevin Erskine). **File → About...** shows the version and the folder the editor was loaded from, and the Start Page shows a version pill beside the title (hover it for the install folder). The version is read at runtime from the installed `.addin`, so it always matches what Clarion actually loaded, which makes duplicate or stale installs easy to spot.
+
+### Changed
+- **Compact Start Page.** The header is a single row (title, version, subtitle, small Dark/Light toggle) instead of a large card; the New / Open / Open URL buttons are smaller and left-aligned; Recent Files and Recent URLs sit side by side when there's room; each recent item is one line with the full path in a tooltip; empty lists take a single line.
+- **Keyboard shortcut is now `Ctrl+Shift+K`.** `Ctrl+Alt+M` was also bound to the IDE's own *Edit → Enable Code Completion* and to ClarionAssistant's *Class Helper*, so it often didn't open the editor. `Ctrl+Shift+K` is unused by the IDE and the common addins, and avoids `Ctrl+Alt` (AltGr on many non-US keyboards).
+- **The editor menu item is now just "Markdown Editor"** (View → Tools).
+- Scripts and stylesheets are loaded with a version/file-time stamp so WebView2 can't keep serving a cached copy from an older release after an upgrade.
+
+### Removed
+- **The Markdown Editor pad.** Clarion's document tabs can already be docked beside other documents or floated onto another monitor, so the separate pad no longer offered anything the document tab doesn't. Every entry point (menu, shortcut, opening a `.md` file, Open from URL, the public API) uses the document tab. **If you had the pad docked, drag the document tab to the same spot.** With a single editor window, the "already open in another editor instance" prompt is gone too.
+
+### Developer
+- `<Version>` in `ClarionMarkdownEditor.csproj` is the single place to bump the version: it drives the assembly version attributes and is stamped into the shipped `.addin` at build time.
+- New `deploy.ps1` builds, refuses to run while Clarion is open, copies the release file set into `accessory\addins\ClarionMarkdownEditor`, verifies every file by hash and warns about duplicate copies.
+- Your Clarion path lives only in the gitignored `Directory.Build.props.user` (template: `Directory.Build.props.user.example`); both `dotnet build` and `deploy.ps1` read it, so no machine paths are committed.
+- `addin-config.json` and the README now use `accessory\addins\ClarionMarkdownEditor` everywhere (it previously mentioned `MarkdownAddin` and `MarkdownEditor`). See [ClarionLive/ClarionAssistant#290](https://github.com/ClarionLive/ClarionAssistant/issues/290).
+
+### Known issue
+- Drag and drop from Explorer ([#12](https://github.com/msarson/ClarionMarkdownEditor/issues/12)) has been reported not to work on one machine; investigation is ongoing. The new version display should help confirm which build is running.
+
+---
+
 ## v1.4.0 — 2026-10-30 — Drag and drop files from Explorer
 
 ### Added
