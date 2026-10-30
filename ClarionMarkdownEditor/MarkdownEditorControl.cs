@@ -367,6 +367,13 @@ namespace ClarionMarkdownEditor
             }
         }
 
+        private static string CacheBuster(string addinDir, string resourceName)
+        {
+            var path = Path.Combine(addinDir, "Resources", resourceName);
+            var stamp = File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks.ToString() : "0";
+            return "?v=" + Uri.EscapeDataString(AddinInfo.Version) + "-" + stamp;
+        }
+
         private string InjectScripts(string html)
         {
             var injectionLog = "INJECTION DEBUG: ";
@@ -424,11 +431,10 @@ namespace ClarionMarkdownEditor
                 html = html.Replace("<!-- INJECT_CLARION_LANG -->", $"<script>\n{clarionLang}\n    </script>");
                 injectionLog += "Clarion lang injected; ";
                 
-                // Version-stamp our own script and stylesheet so WebView2 can't keep serving a
-                // cached copy from a previous release after an upgrade
-                var versionQuery = "?v=" + Uri.EscapeDataString(AddinInfo.Version);
-                html = html.Replace("src=\"markdown-editor.js\"", $"src=\"markdown-editor.js{versionQuery}\"");
-                html = html.Replace("href=\"markdown-editor.css\"", $"href=\"markdown-editor.css{versionQuery}\"");
+                // Stamp our own script and stylesheet with the version and file time so WebView2
+                // can't keep serving a cached copy after an upgrade or a redeploy
+                html = html.Replace("src=\"markdown-editor.js\"", $"src=\"markdown-editor.js{CacheBuster(addinDir, "markdown-editor.js")}\"");
+                html = html.Replace("href=\"markdown-editor.css\"", $"href=\"markdown-editor.css{CacheBuster(addinDir, "markdown-editor.css")}\"");
                 injectionLog += $"version {AddinInfo.Version} stamped; ";
 
                 // Add diagnostic message in HTML
