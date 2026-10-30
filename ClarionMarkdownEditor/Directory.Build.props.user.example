@@ -1,0 +1,12 @@
+<!--
+  Per-developer Clarion location. Copy this file to Directory.Build.props.user (same folder,
+  gitignored) and point ClarionBin at your Clarion IDE's bin folder.
+
+  Both `dotnet build` and ..\deploy.ps1 read it, so after this one step neither needs any
+  arguments. deploy.ps1 installs into the Clarion folder that contains this bin.
+-->
+<Project>
+  <PropertyGroup>
+    <ClarionBin>C:\Clarion\Clarion12\bin</ClarionBin>
+  </PropertyGroup>
+</Project>
