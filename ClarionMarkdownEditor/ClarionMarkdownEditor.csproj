@@ -16,7 +16,7 @@
     <Identity version>, which the About dialog, Addin Finder and the ClarionAssistant installer read.
   -->
   <PropertyGroup>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
     <AssemblyTitle>ClarionMarkdownEditor</AssemblyTitle>
     <Product>ClarionMarkdownEditor</Product>
     <Description>Markdown file viewer and editor for Clarion IDE</Description>
