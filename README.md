@@ -54,7 +54,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 - **About Dialog**: View credits and project information (File > About)
 - **IDE Integration**: Insert markdown content directly into the active Clarion editor
 - **Keyboard Shortcuts**:
-  - `Ctrl+Alt+M` - Open the Markdown Editor
+  - `Ctrl+Shift+K` - Open the Markdown Editor
   - `Ctrl+S` - Save current document
   - `Ctrl+B` - Bold
   - `Ctrl+I` - Italic
@@ -148,8 +148,10 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
    The project uses `Directory.Build.props` to locate your Clarion installation.
    The default path is `C:\Clarion12\bin`.
 
-   **If your Clarion is installed elsewhere**, create a file called
-   `ClarionMarkdownEditor\Directory.Build.props.user` (gitignored) with:
+   **If your Clarion is installed elsewhere** (most setups), copy
+   `ClarionMarkdownEditor\Directory.Build.props.user.example` to
+   `ClarionMarkdownEditor\Directory.Build.props.user` (gitignored, so it stays on your machine)
+   and set your path:
    ```xml
    <Project>
      <PropertyGroup>
@@ -157,6 +159,7 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
      </PropertyGroup>
    </Project>
    ```
+   Both the build and `deploy.ps1` read this file, so this is the only place your path lives.
 
    Alternatively, set the `CLARION_BIN` environment variable before building:
    ```powershell
@@ -170,7 +173,13 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
 
 4. **Deploy to Clarion**
 
-   Copy from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\ClarionMarkdownEditor\`:
+   The quickest way is the deploy script, which builds, refuses to run while Clarion is open, copies
+   everything below, verifies each file by hash and warns about duplicate copies:
+   ```powershell
+   .\deploy.ps1                                    # the Clarion set in Directory.Build.props.user
+   .\deploy.ps1 -ClarionRoot C:\Clarion\Clarion11.1  # or any other install
+   ```
+   Or copy by hand from `ClarionMarkdownEditor\bin\Release\net48\` to `{CLARION_PATH}\accessory\addins\ClarionMarkdownEditor\`:
    - `ClarionMarkdownEditor.dll`
    - `ClarionMarkdownEditor.addin`
    - `Microsoft.Web.WebView2.Core.dll`
@@ -228,7 +237,7 @@ The version is set in one place: `<Version>` in `ClarionMarkdownEditor\ClarionMa
 
 ### Opening the Editor
 
-- **Keyboard**: Press `Ctrl+Alt+M`
+- **Keyboard**: Press `Ctrl+Shift+K`
 - **Menu**: Go to `Tools → Markdown Editor`
 - **File**: Open any `.md` / `.markdown` file in the IDE
 
