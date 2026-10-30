@@ -6,9 +6,9 @@ using ICSharpCode.SharpDevelop.Gui;
 namespace ClarionMarkdownEditor
 {
     /// <summary>
-    /// ViewContent for Markdown Editor that allows docking in the main document area.
-    /// This enables the editor to be opened as a main window (like source files)
-    /// rather than just as a tool pad.
+    /// ViewContent for the Markdown Editor: the single editor window, opened as a document tab
+    /// in the main document area like source files. One instance holds all open Markdown tabs;
+    /// it can be dragged to sit beside other documents or floated like any document tab.
     /// </summary>
     public class MarkdownEditorViewContent : AbstractViewContent
     {
@@ -69,23 +69,6 @@ namespace ClarionMarkdownEditor
                     OnFileNameChanged(EventArgs.Empty);
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns true if this editor instance has the given file open as a tab.
-        /// </summary>
-        public bool HasFileOpen(string filePath)
-        {
-            return _control?.HasFileOpen(filePath) ?? false;
-        }
-
-        /// <summary>
-        /// Switches the internal editor to the tab for the given file and activates this window.
-        /// </summary>
-        public void SwitchToFile(string filePath)
-        {
-            _control?.SwitchToFileTab(filePath);
-            WorkbenchWindow?.SelectWindow();
         }
 
         /// <summary>

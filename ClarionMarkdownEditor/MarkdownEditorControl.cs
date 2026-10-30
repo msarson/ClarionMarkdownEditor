@@ -81,14 +81,8 @@ namespace ClarionMarkdownEditor
         // VS Code, etc.) auto-refresh clean tabs and flag dirty ones.
         private readonly TabFileWatcher _fileWatcher;
 
-        // All live instances (pad + document) — used for cross-instance file collision detection
-        private static readonly List<MarkdownEditorControl> _allInstances = new List<MarkdownEditorControl>();
-        private static readonly object _allInstancesLock = new object();
-
         partial void OnCustomDispose()
         {
-            lock (_allInstancesLock) _allInstances.Remove(this);
-
             _fileWatcher?.Dispose();
 
             if (_menuCloseFilter != null)
@@ -106,7 +100,6 @@ namespace ClarionMarkdownEditor
 
         public MarkdownEditorControl()
         {
-            lock (_allInstancesLock) _allInstances.Add(this);
             InitializeComponent();
             _editorService = new EditorService();
             _settingsService = new SettingsService();
@@ -904,33 +897,6 @@ namespace ClarionMarkdownEditor
             return slash > 8 ? url.Substring(0, slash + 1) : url;
         }
 
-        /// <summary>
-        /// Returns true if this control instance already has the given file open as a tab.
-        /// </summary>
-        public bool HasFileOpen(string filePath)
-        {
-            return _openTabs.Values.Any(t =>
-                !string.IsNullOrEmpty(t.FilePath) &&
-                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-        }
-
-        /// <summary>
-        /// Switches to the tab for the given file and activates this control's parent window.
-        /// </summary>
-        public void SwitchToFileTab(string filePath)
-        {
-            var tab = _openTabs.Values.FirstOrDefault(t =>
-                !string.IsNullOrEmpty(t.FilePath) &&
-                string.Equals(t.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-            if (tab != null)
-            {
-                SwitchToTab(tab.Id);
-                // Bring parent window to front
-                var form = FindForm();
-                form?.Activate();
-            }
-        }
-
         private void OpenFile(string filePath)
         {
             Log($"OpenFile called: '{filePath}'");
@@ -965,42 +931,6 @@ namespace ClarionMarkdownEditor
                 AddToRecentFiles(filePath);
                 _ = RefreshRecentFilesInStartPage();
                 return;
-            }
-
-            // Check if the file is open in a different editor instance (pad or document tab)
-            MarkdownEditorControl otherControl;
-            lock (_allInstancesLock)
-                otherControl = _allInstances.FirstOrDefault(c => c != this && c.HasFileOpen(filePath));
-            Log($"OpenFile otherControl: {(otherControl != null ? "found" : "null")}, _allInstances.Count={_allInstances.Count}");
-
-            if (otherControl != null)
-            {
-                var result = MessageBox.Show(
-                    $"{Path.GetFileName(filePath)} is already open in another editor instance.\n\n" +
-                    "Yes  — Switch to that instance\n" +
-                    "No   — Open here anyway\n" +
-                    "Cancel — Do nothing",
-                    "File Already Open",
-                    MessageBoxButtons.YesNoCancel,
-                    MessageBoxIcon.Information,
-                    MessageBoxDefaultButton.Button1);
-
-                if (result == DialogResult.Yes)
-                {
-                    otherControl.SwitchToFileTab(filePath);
-                    // Also activate the workbench window if it's a document tab
-                    var docContent = ICSharpCode.SharpDevelop.Gui.WorkbenchSingleton.Workbench
-                        ?.ViewContentCollection
-                        .OfType<MarkdownEditorViewContent>()
-                        .FirstOrDefault(vc => vc.Control == otherControl);
-                    docContent?.WorkbenchWindow?.SelectWindow();
-                    return;
-                }
-                else if (result == DialogResult.Cancel)
-                {
-                    return;
-                }
-                // No = fall through and open in this instance
             }
 
             // Create a new tab for this file
@@ -1682,8 +1612,8 @@ namespace ClarionMarkdownEditor
                                     Log($"openRecentFile raw extracted: '{filePath}'");
                                     if (!string.IsNullOrEmpty(filePath))
                                     {
-                                        // Defer out of WebView2 callback so cross-instance guard
-                                        // (MessageBox.Show) works the same as from a menu click
+                                        // Defer out of WebView2 callback so OpenFile's MessageBox
+                                        // prompts behave the same as from a menu click
                                         var fp = filePath;
                                         BeginInvoke(new Action(() => OpenFile(fp)));
                                     }

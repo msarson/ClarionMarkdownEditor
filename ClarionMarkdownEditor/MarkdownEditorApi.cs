@@ -50,9 +50,7 @@ namespace ClarionMarkdownEditor
         }
 
         // Opens (or refocuses) a MarkdownEditorViewContent document window and
-        // returns its underlying control. Mirrors ShowMarkdownEditorWindowCommand
-        // so new entry points land in the full-page editor rather than the
-        // legacy dockable pad.
+        // returns its underlying control. Mirrors ShowMarkdownEditorWindowCommand.
         private static MarkdownEditorControl EnsureWindowVisible()
         {
             var workbench = WorkbenchSingleton.Workbench;
