@@ -526,6 +526,21 @@
             }
         }
 
+        // Called from C# once the page has loaded: the running addin version (from the
+        // installed .addin manifest) and the folder it was loaded from
+        function setAddinInfo(version, installFolder) {
+            var label = version ? 'Version ' + version : '';
+            ['aboutVersion', 'startPageVersion'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = label;
+            });
+            var pathEl = document.getElementById('aboutInstallPath');
+            if (pathEl) {
+                pathEl.textContent = installFolder || '';
+                pathEl.title = installFolder || '';
+            }
+        }
+
         // About dialog functions
         function showAboutDialog() {
             document.getElementById('aboutModal').classList.add('visible');

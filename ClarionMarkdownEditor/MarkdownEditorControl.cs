@@ -172,6 +172,7 @@ namespace ClarionMarkdownEditor
             try
             {
                 System.Diagnostics.Debug.WriteLine("=== InitializeWebView START ===");
+                Log($"Markdown Editor {AddinInfo.Version} loaded from {AddinInfo.InstallFolder}");
 
                 // Initialize WebView2 directly - let EnsureCoreWebView2Async handle any errors
                 System.Diagnostics.Debug.WriteLine("About to call EnsureCoreWebView2Async...");
@@ -236,6 +237,10 @@ namespace ClarionMarkdownEditor
                             var ratioArg = ratioVal.ToString(System.Globalization.CultureInfo.InvariantCulture);
                             await webView.ExecuteScriptAsync(
                                 $"applyViewPreferences({expandedPref}, {ratioArg}, {horizontalPref})");
+
+                            // Show the running version on the Start Page and in the About dialog
+                            await webView.ExecuteScriptAsync(
+                                $"setAddinInfo(\"{EscapeJsString(AddinInfo.Version)}\", \"{EscapeJsString(AddinInfo.InstallFolder)}\")");
                             if (!string.IsNullOrEmpty(_pendingFilePath))
                             {
                                 var path = _pendingFilePath;
@@ -426,6 +431,13 @@ namespace ClarionMarkdownEditor
                 html = html.Replace("<!-- INJECT_CLARION_LANG -->", $"<script>\n{clarionLang}\n    </script>");
                 injectionLog += "Clarion lang injected; ";
                 
+                // Version-stamp our own script and stylesheet so WebView2 can't keep serving a
+                // cached copy from a previous release after an upgrade
+                var versionQuery = "?v=" + Uri.EscapeDataString(AddinInfo.Version);
+                html = html.Replace("src=\"markdown-editor.js\"", $"src=\"markdown-editor.js{versionQuery}\"");
+                html = html.Replace("href=\"markdown-editor.css\"", $"href=\"markdown-editor.css{versionQuery}\"");
+                injectionLog += $"version {AddinInfo.Version} stamped; ";
+
                 // Add diagnostic message in HTML
                 html = html.Replace("</body>", $"<!-- {injectionLog} -->\n</body>");
                 

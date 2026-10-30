@@ -7,8 +7,22 @@
     <TargetFramework>net48</TargetFramework>
     <PlatformTarget>x86</PlatformTarget>
     <UseWindowsForms>True</UseWindowsForms>
-    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <!--
+    Release version: the ONE place to bump it. Drives AssemblyVersion / AssemblyFileVersion /
+    AssemblyInformationalVersion, and StampAddinVersion below writes it into the shipped .addin
+    <Identity version>, which the About dialog, Addin Finder and the ClarionAssistant installer read.
+  -->
+  <PropertyGroup>
+    <Version>1.4.0</Version>
+    <AssemblyTitle>ClarionMarkdownEditor</AssemblyTitle>
+    <Product>ClarionMarkdownEditor</Product>
+    <Description>Markdown file viewer and editor for Clarion IDE</Description>
+    <Copyright>Copyright 2026 John Hickey</Copyright>
+    <GenerateAssemblyCompanyAttribute>False</GenerateAssemblyCompanyAttribute>
+    <IncludeSourceRevisionInInformationalVersion>False</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,6 +68,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <!-- Stamp $(Version) into the output copy of the .addin so the manifest can't drift from the DLL -->
+  <Target Name="StampAddinVersion" AfterTargets="CopyFilesToOutputDirectory">
+    <XmlPoke XmlInputPath="$(OutDir)ClarionMarkdownEditor.addin"
+             Query="/AddIn/Manifest/Identity/@version"
+             Value="$(Version)" />
+  </Target>
 
   <!-- Ensure WebView2Loader.dll lands in the output root for deployment -->
   <Target Name="CopyWebView2Loader" AfterTargets="Build">
