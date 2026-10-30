@@ -42,7 +42,10 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 - **Dark Mode**: Toggle between light and dark themes via **View > Dark Mode** or the 🌓 button on the Start Page — preference is remembered across sessions
 - **Scroll Synchronization**: Bidirectional scroll sync between editor and preview (toggleable)
 - **Horizontal Scrolling**: Long lines scroll instead of wrapping
-- **Expand/Collapse Preview**: Toggle between split view and full-width preview mode
+- **Expand/Collapse Preview**: Toggle between split view and full-width preview mode; your last choice is remembered for new tabs
+- **Resizable Panes**: Drag the splitter between editor and preview (side by side or stacked); double-click it to reset to 50/50
+- **Auto-Refresh**: Open files reload automatically when changed on disk by another program (VS Code, an AI tool, etc.); tabs with unsaved edits show a ↻ badge instead of being overwritten
+- **Drag and Drop**: Drag `.md` files from Windows Explorer onto the editor to open them
 - **Formatting Toolbar**: Quick buttons for common markdown syntax:
   - Bold, Italic, Inline Code, Code Blocks
   - Headers (H1, H2, H3)
@@ -51,8 +54,8 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - Links, Images, Tables
 - **File Operations**: New, Open, Save, Save As
 - **Open Markdown from URL**: Load a Markdown document directly from a URL — raw URLs, `github.com/owner/repo/blob/...`, or just `github.com/owner/repo` (auto-resolves to `README.md` on `main`, falling back to `master`). URL-loaded tabs are read-only with a 🔒 badge; **Save As** promotes them into editable local files. Relative images and links resolve against the source URL, and clicking a relative `.md` link opens it as a new tab. Fetched bodies are cached under `%APPDATA%\ClarionMarkdownEditor\cache\` with conditional GETs, so reopens are fast and a stale copy is served when offline. Available via **Tools → Open Markdown from URL...** or the **🌐 Open URL...** button on the Start Page (Recent URLs list included)
-- **About Dialog**: View credits and project information (File > About)
-- **IDE Integration**: Insert markdown content directly into the active Clarion editor
+- **Start Page**: New / Open / Open URL actions and your Recent Files and Recent URLs, with the running version shown beside the title
+- **About Dialog**: Version, install folder and credits (**File → About...**)
 - **Keyboard Shortcuts**:
   - `Ctrl+Shift+K` - Open the Markdown Editor
   - `Ctrl+S` - Save current document
@@ -61,7 +64,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
   - All formatting shortcuts support **undo** (Ctrl+Z)
 - **Dockable**: Opens as a document tab that can be dragged to sit beside your source files or floated onto another monitor
 - **File Type Handler**: Opening a `.md` or `.markdown` file in the IDE automatically opens it in the Markdown Editor — all files share a single editor instance with internal tabs
-- **Remembers Settings**: Last opened folder and dark mode preference saved between sessions
+- **Remembers Settings**: Last opened folder, dark mode, Expand/Split preference, split ratio and split direction are saved between sessions
 - **Dirty Indicator**: The editor tab shows `*` when a document has unsaved changes — clears automatically when changes are undone back to the last-saved state
 
 ## Requirements
@@ -83,7 +86,7 @@ A modern Markdown file viewer and editor addin for the Clarion IDE. Features a s
 
 ### Recommended IDEs
 
-You can open ClarionMarkdownEditor.slnx in any of the following:
+You can open ClarionMarkdownEditor.sln in any of the following:
 
 - **[Visual Studio Code](https://code.visualstudio.com/)** (free, lightweight)
   Recommended extensions:
@@ -93,7 +96,7 @@ You can open ClarionMarkdownEditor.slnx in any of the following:
   - [XML](https://marketplace.visualstudio.com/items?itemName=redhat.vscode-xml) — syntax support for .addin and .props files
 
 - **[Visual Studio Community](https://visualstudio.microsoft.com/vs/community/)** (free for open source)
-  Open the .slnx file directly — all packages restore automatically on first build.
+  Open the .sln file directly — all packages restore automatically on first build.
 
 - **[JetBrains Rider](https://www.jetbrains.com/rider/)** (commercial, free for open source)
   Full .NET IDE with excellent SDK-style project support.
@@ -113,11 +116,13 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
    > folders contain the same addin ("Identity name used by multiple addins"), so remove any older
    > copy (for example `accessory\addins\MarkdownEditor\`) first. **File → About...** in the editor shows
    > the running version and the folder it was loaded from.
-   Required files:
+
+   Required files (the `.addin` must be in the root of that folder):
    - `ClarionMarkdownEditor.dll`
    - `ClarionMarkdownEditor.addin`
    - `Microsoft.Web.WebView2.Core.dll`
    - `Microsoft.Web.WebView2.WinForms.dll`
+   - `Microsoft.Web.WebView2.Wpf.dll`
    - `WebView2Loader.dll`
    - `Resources\markdown-editor.html`
    - `Resources\markdown-editor.css`
@@ -130,7 +135,7 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
    - Right-click the zip **before** extracting → **Properties** → tick **Unblock** → **OK**, then extract, or
    - After extracting, run this in PowerShell against the install folder:
      ```powershell
-     Get-ChildItem "C:\Clarion12\accessory\addins\MarkdownEditor" -Recurse | Unblock-File
+     Get-ChildItem "{CLARION_PATH}\accessory\addins\ClarionMarkdownEditor" -Recurse | Unblock-File
      ```
 4. Ensure WebView2 Runtime is installed
 5. Restart Clarion IDE
@@ -184,6 +189,7 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
    - `ClarionMarkdownEditor.addin`
    - `Microsoft.Web.WebView2.Core.dll`
    - `Microsoft.Web.WebView2.WinForms.dll`
+   - `Microsoft.Web.WebView2.Wpf.dll`
    - `WebView2Loader.dll`
    - `Resources\markdown-editor.html`
    - `Resources\markdown-editor.css`
@@ -198,23 +204,28 @@ The easiest route is [Clarion Addin Finder](https://github.com/msarson/ClarionAd
 
 The version is set in one place: `<Version>` in `ClarionMarkdownEditor\ClarionMarkdownEditor.csproj`. The build uses it for the DLL's version attributes and stamps it into the `<Identity version>` of the `ClarionMarkdownEditor.addin` copied to the output folder. Always ship the `.addin` from the build output, not the source copy.
 
+Release zips are named `ClarionMarkdownEditor-v<version>.zip` and contain the files listed above with the `.addin` in the zip root. Clarion Addin Finder and the ClarionAssistant installer both download that asset, so keep the name and layout unchanged. See [CHANGELOG.md](CHANGELOG.md) for release history.
+
 ## Screenshots
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ New  Open  Save  Save As │ Insert to IDE │ filename.md      │
+│ File  View                                                  │
+├─────────────────────────────────────────────────────────────┤
+│ Start Page │ README.md │ notes.md * │                       │
 ├─────────────────────────────────────────────────────────────┤
 │ B │ I │ </> │ {} │ Link │ Img │ H1 │ H2 │ H3 │ List │ ...   │
-├────────────────────────────┬────────────────────────────────┤
-│ MARKDOWN                   │ PREVIEW                [Expand]│
-├────────────────────────────┼────────────────────────────────┤
-│ # My Document              │ My Document                    │
-│                            │ ───────────                    │
-│ This is **bold** text.     │ This is bold text.             │
-│                            │                                │
-│ - Item 1                   │ • Item 1                       │
-│ - Item 2                   │ • Item 2                       │
-└────────────────────────────┴────────────────────────────────┘
+├────────────────────────────┬┬───────────────────────────────┤
+│ MARKDOWN                   ││ PREVIEW               [Expand]│
+├────────────────────────────┼┼───────────────────────────────┤
+│ # My Document              ││ My Document                   │
+│                            ││ ───────────                   │
+│ This is **bold** text.     ││ This is bold text.            │
+│                            ││                               │
+│ - Item 1                   ││ • Item 1                      │
+│ - Item 2                   ││ • Item 2                      │
+└────────────────────────────┴┴───────────────────────────────┘
 ```
+The double line between the panes is the splitter: drag it to resize.
 
 ### Expanded Preview Mode
 ```
@@ -243,11 +254,11 @@ The version is set in one place: `<Version>` in `ClarionMarkdownEditor\ClarionMa
 
 The editor opens as a single document tab holding all your Markdown files as internal tabs. Like any document tab it can be dragged to sit beside your source code or floated onto another monitor.
 
-> Earlier versions also had a separate **Markdown Editor (Pad)**. It was removed in v1.4.1 because the document tab can be docked the same way; if you had the pad docked, drag the document tab to that spot instead.
+> Earlier versions also had a separate **Markdown Editor (Pad)**. It was removed in v1.5.0 because the document tab can be docked the same way; if you had the pad docked, drag the document tab to that spot instead.
 
 ### Editing Markdown
 
-1. Click **Open** to load an existing `.md` file, or start typing in a new document
+1. Use **Open File** on the Start Page (or **File → Open...**), drag a file in from Explorer, or click **New File** to start a new document
 2. Use the formatting toolbar for quick markdown syntax insertion
 3. Preview updates in real-time as you type
 
@@ -256,10 +267,6 @@ The editor opens as a single document tab holding all your Markdown files as int
 - **Split View**: Editor and preview side-by-side (default)
 - **Expanded Preview**: Click **Expand** button to hide the editor and view preview full-width
 - **Return to Split**: Click **Split** button to restore side-by-side view
-
-### Insert to IDE
-
-Click **Insert to IDE** to insert the current markdown content at the cursor position in the active Clarion source editor.
 
 ## Supported Markdown Syntax
 
@@ -283,24 +290,37 @@ Click **Insert to IDE** to insert the current markdown content at the cursor pos
 ## Project Structure
 
 ```
-MarkDownAddin/
+ClarionMarkdownEditor/
 ├── ClarionMarkdownEditor.sln
+├── deploy.ps1                           # Build + verified deploy into a local Clarion
 ├── addin-config.json
+├── CHANGELOG.md
 ├── README.md
 └── ClarionMarkdownEditor/
-    ├── ClarionMarkdownEditor.csproj
-    ├── ClarionMarkdownEditor.addin      # SharpDevelop addin manifest
+    ├── ClarionMarkdownEditor.csproj     # <Version> lives here (single source)
+    ├── ClarionMarkdownEditor.addin      # SharpDevelop addin manifest (version stamped at build)
     ├── Directory.Build.props            # Clarion path config (ClarionBin variable)
+    ├── Directory.Build.props.user.example # Template for your gitignored local Clarion path
     ├── Properties/
     │   └── AssemblyInfo.cs
-    ├── MarkdownEditorViewContent.cs     # Document window container
-    ├── MarkdownEditorControl.cs         # Main control with WebBrowser
+    ├── MarkdownEditorViewContent.cs     # The editor's document window
+    ├── MarkdownEditorControl.cs         # Main control hosting WebView2
     ├── MarkdownEditorControl.Designer.cs
-    ├── ShowMarkdownEditorWindowCommand.cs # Tools menu command
+    ├── MarkdownDisplayBinding.cs        # Opens .md / .markdown files in the editor
+    ├── MarkdownEditorApi.cs             # Public OpenUrl entry point for other addins
+    ├── ShowMarkdownEditorWindowCommand.cs # Tools → Markdown Editor (Ctrl+Shift+K)
+    ├── OpenMarkdownFromUrlCommand.cs    # Tools → Open Markdown from URL...
+    ├── UrlPromptDialog.cs
+    ├── RegisterIconsCommand.cs          # Registers the menu icon at startup
     ├── Services/
+    │   ├── AddinInfo.cs                 # Running version + install folder
     │   ├── EditorService.cs             # IDE editor interaction
+    │   ├── MarkdownFetcher.cs           # Fetches Markdown from URLs
+    │   ├── MarkdownUrlCache.cs          # Conditional-GET cache for fetched URLs
+    │   ├── UrlNormalizer.cs             # GitHub URL → raw URL rewriting
+    │   ├── TabFileWatcher.cs            # Auto-refresh on external file changes
     │   ├── SettingsService.cs           # User settings persistence
-    │   └── ScriptBridge.cs              # JS-to-C# communication
+    │   └── ScriptBridge.cs              # Legacy WebBrowser bridge (unused since WebView2)
     └── Resources/
         ├── markdown-editor.html         # HTML structure (UI skeleton)
         ├── markdown-editor.css          # All editor styles (light/dark/layout)
@@ -316,7 +336,7 @@ MarkDownAddin/
 
 - **UI Layer**: HTML/CSS/JavaScript in WebView2 (Chromium-based)
 - **Modern Browser Engine**: WebView2 provides full modern web standards support
-- **Native Toolbar**: WinForms ToolStrip for file operations
+- **Native Menus**: WinForms menu strip (File / View) above the WebView2 page
 - **Markdown Parser**: [marked.js](https://github.com/markedjs/marked) 11.2.0 — CommonMark + GFM (tables, task lists, strikethrough, autolinks)
 - **Syntax Highlighting**: Highlight.js 11.9.0 with custom Clarion language definition
 - **IDE Integration**: Uses reflection for compatibility across Clarion IDE versions
@@ -382,12 +402,9 @@ launch the URL in the system browser instead.
 
 ## Development Notes
 
-### Key Commits
+### History
 
-1. **Initial commit**: Basic markdown editor with WebBrowser control
-2. **Dark mode & UI enhancements**: Added dark mode, scroll sync, horizontal scrolling
-3. **WebView2 migration**: Replaced IE WebBrowser with Chromium WebView2
-4. **Syntax highlighting**: Integrated Highlight.js with custom Clarion support
+See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ### Known Limitations
 
