@@ -10,6 +10,15 @@ Contributors:
 
 --- 
 
+## v1.4.0 — 2026-10-30 — Drag and drop files from Explorer
+
+### Added
+- **Open files by dragging them in from Explorer** ([#12](https://github.com/msarson/ClarionMarkdownEditor/issues/12), requested by Kevin Erskine; originally upstream [peterparker57#7](https://github.com/peterparker57/ClarionMarkdownEditor/issues/7)). Previously WebView2 handled the drop itself — the cursor showed "+copy" and the file opened in the default external viewer outside the IDE. Dropped files now open in editor tabs.
+  - The page intercepts file drags only (dragging selected text inside the editor is unaffected) and shows a dashed **"Drop to open"** highlight while a file is over the editor.
+  - Files are passed to C# with `postMessageWithAdditionalObjects` and resolved to disk paths via `CoreWebView2File`, then opened through the same `OpenFile` path as **File → Open**: an already-open file switches to its tab, a file open in another editor instance gets the usual prompt, and recent files are updated. Multiple files can be dropped at once; folders are ignored.
+
+---
+
 ## v1.3.0 — 2026-08-10 — Auto-refresh, remembered view preferences, and resizable panes
 
 ### Added
