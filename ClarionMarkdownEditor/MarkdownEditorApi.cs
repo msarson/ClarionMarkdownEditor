@@ -56,9 +56,7 @@ namespace ClarionMarkdownEditor
             var workbench = WorkbenchSingleton.Workbench;
             if (workbench == null) return null;
 
-            var existing = workbench.ViewContentCollection
-                .OfType<MarkdownEditorViewContent>()
-                .FirstOrDefault();
+            var existing = MarkdownEditorViewContent.FindOpenInstance();
 
             if (existing != null)
             {

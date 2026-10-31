@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using ICSharpCode.SharpDevelop.Gui;
 
@@ -29,6 +30,26 @@ namespace ClarionMarkdownEditor
                 _fileName = fileName;
             }
         }
+
+        /// <summary>
+        /// The open Markdown Editor instance, or null when there is none.
+        /// Skips an instance that is still listed in ViewContentCollection after its window
+        /// was closed and its control disposed. Reusing that one makes every later .md open fail
+        /// with the IDE's "Cannot load file ... check the file permission", and makes
+        /// View > Tools > Markdown Editor do nothing, until the IDE is restarted.
+        /// </summary>
+        internal static MarkdownEditorViewContent FindOpenInstance()
+        {
+            var workbench = WorkbenchSingleton.Workbench;
+            if (workbench == null) return null;
+
+            return workbench.ViewContentCollection
+                .OfType<MarkdownEditorViewContent>()
+                .FirstOrDefault(v => v.IsAlive);
+        }
+
+        /// <summary>True while this instance has a window and an undisposed control.</summary>
+        internal bool IsAlive => _control != null && !_control.IsDisposed && WorkbenchWindow != null;
 
         /// <summary>
         /// Gets the main control for this view content.
