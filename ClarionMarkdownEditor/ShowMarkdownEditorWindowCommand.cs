@@ -19,9 +19,7 @@ namespace ClarionMarkdownEditor
                 if (workbench == null) return;
 
                 // If an instance already exists, switch to it instead of creating a new one
-                var existing = workbench.ViewContentCollection
-                    .OfType<MarkdownEditorViewContent>()
-                    .FirstOrDefault();
+                var existing = MarkdownEditorViewContent.FindOpenInstance();
 
                 if (existing != null)
                 {

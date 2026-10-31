@@ -23,9 +23,8 @@ namespace ClarionMarkdownEditor
         public IViewContent CreateContentForFile(string fileName)
         {
             // Reuse the existing Markdown Editor instance if one is already open
-            var existing = WorkbenchSingleton.Workbench.ViewContentCollection
-                .OfType<MarkdownEditorViewContent>()
-                .FirstOrDefault();
+            // (a closed, disposed instance is skipped: see FindOpenInstance)
+            var existing = MarkdownEditorViewContent.FindOpenInstance();
 
             if (existing != null)
             {
