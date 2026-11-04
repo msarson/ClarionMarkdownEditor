@@ -25,10 +25,28 @@
             .tab-context-menu,
             .format-toolbar,
             .editor-pane,
-            .status-bar,
+            .pane-splitter,
+            .statusbar,
+            .start-page,
+            .about-modal-overlay,
             .preview-pane .pane-header,
             .toggle-btn {
                 display: none !important;
+            }
+
+            /* On screen the page is a 100%-high flex column and the preview
+               scrolls inside its own box, so printing it as-is puts only the
+               visible window on paper. Let every box grow to the full document
+               height so the preview flows across as many pages as it needs. */
+            html, body, .container, .editor-container, .preview-pane, .preview-pane .preview-content {
+                height: auto !important;
+                min-height: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+            }
+
+            .container, .editor-container, .preview-pane {
+                display: block !important;
             }
             
             .container {
@@ -36,6 +54,8 @@
             }
             
             .preview-pane {
+                width: 100% !important;
+                flex: none !important;
                 border: none !important;
                 margin: 0 !important;
                 padding: 20px !important;
@@ -50,6 +70,13 @@
             pre {
                 page-break-inside: avoid;
                 border: 1px solid #ddd !important;
+            }
+
+            /* Wrap long code lines instead of cutting them off at the page edge */
+            .preview-pane .preview-content pre {
+                white-space: pre-wrap !important;
+                word-wrap: break-word;
+                overflow: visible !important;
             }
         }
 
