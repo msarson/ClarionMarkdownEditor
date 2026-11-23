@@ -69,6 +69,16 @@ namespace ClarionMarkdownEditor
         private string _pendingUrl = null;
         private bool _isDarkMode = false;
 
+        // Relative images of local files are served from this address by
+        // CoreWebView2_WebResourceRequested: <prefix><token>/<path in the folder>.
+        private const string LocalImagePrefix = "https://md-local-images.example/";
+
+        // Folder of an open local file <-> its random token (see GetLocalImageBase).
+        private readonly Dictionary<string, string> _localImageTokens =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _localImageFolders =
+            new Dictionary<string, string>(StringComparer.Ordinal);
+
         // Tab tracking fields
         private Dictionary<string, FileTab> _openTabs = new Dictionary<string, FileTab>();
         private string _activeTabId;
@@ -189,7 +199,13 @@ namespace ClarionMarkdownEditor
                     resourcesPath,
                     Microsoft.Web.WebView2.Core.CoreWebView2HostResourceAccessKind.Allow
                 );
-                
+
+                // Relative images of local files (see GetLocalImageBase). Registered before
+                // the page loads; image requests only, so scripts cannot fetch these URLs.
+                webView.CoreWebView2.AddWebResourceRequestedFilter(
+                    LocalImagePrefix + "*", Microsoft.Web.WebView2.Core.CoreWebView2WebResourceContext.Image);
+                webView.CoreWebView2.WebResourceRequested += CoreWebView2_WebResourceRequested;
+
                 // Load markdown-editor.html via virtual host (enables CDN)
                 System.Diagnostics.Debug.WriteLine("Navigating to https://app.local/markdown-editor.html");
                 
@@ -1807,6 +1823,93 @@ namespace ClarionMarkdownEditor
         /// <summary>
         /// Calls JavaScript to add a new tab.
         /// </summary>
+        /// <summary>
+        /// The base URL under which the preview finds the relative images of a file
+        /// on disk ("https://md-local-images.example/&lt;token&gt;/"), or null.
+        /// The page is served from https://app.local/ (the add-in's Resources folder),
+        /// so a relative image path would otherwise be looked up there, and a
+        /// file:/// URL is blocked on an https page. A virtual host mapping per folder
+        /// does not work either: WebView2 applies a mapping only to pages loaded after
+        /// it, and the editor page is loaded once, before any file is opened. So each
+        /// folder gets a random token, and CoreWebView2_WebResourceRequested serves
+        /// the images under it.
+        /// </summary>
+        private string GetLocalImageBase(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath)) return null;
+            try
+            {
+                string folder = Path.GetDirectoryName(Path.GetFullPath(filePath));
+                if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder)) return null;
+
+                string token;
+                if (!_localImageTokens.TryGetValue(folder, out token))
+                {
+                    token = Guid.NewGuid().ToString("N").Substring(0, 16);
+                    _localImageTokens[folder] = token;
+                    _localImageFolders[token] = folder;
+                }
+                return LocalImagePrefix + token + "/";
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"GetLocalImageBase error: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Serves an image under LocalImagePrefix from the folder its token stands for.
+        /// The filter is registered for image requests only, so a script's fetch/XHR of
+        /// these URLs is never answered. Only image file types inside the token's
+        /// folder are served; anything else gets a 404.
+        /// </summary>
+        private void CoreWebView2_WebResourceRequested(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebResourceRequestedEventArgs e)
+        {
+            var env = webView?.CoreWebView2?.Environment;
+            if (env == null) return;
+            try
+            {
+                // "/<token>/<path in the folder>"
+                string path = Uri.UnescapeDataString(new Uri(e.Request.Uri).AbsolutePath).TrimStart('/');
+                int slash = path.IndexOf('/');
+                string folder;
+                if (slash > 0 && _localImageFolders.TryGetValue(path.Substring(0, slash), out folder))
+                {
+                    string root = folder.TrimEnd('\\') + "\\";
+                    string full = Path.GetFullPath(Path.Combine(root, path.Substring(slash + 1).Replace('/', '\\')));
+                    string type = ImageContentType(Path.GetExtension(full));
+                    if (type != null && full.StartsWith(root, StringComparison.OrdinalIgnoreCase) && File.Exists(full))
+                    {
+                        e.Response = env.CreateWebResourceResponse(
+                            new MemoryStream(File.ReadAllBytes(full)), 200, "OK", "Content-Type: " + type);
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"WebResourceRequested error: {ex.Message}");
+            }
+            e.Response = env.CreateWebResourceResponse(null, 404, "Not Found", string.Empty);
+        }
+
+        private static string ImageContentType(string extension)
+        {
+            switch ((extension ?? string.Empty).ToLowerInvariant())
+            {
+                case ".png": return "image/png";
+                case ".jpg":
+                case ".jpeg": return "image/jpeg";
+                case ".gif": return "image/gif";
+                case ".bmp": return "image/bmp";
+                case ".webp": return "image/webp";
+                case ".svg": return "image/svg+xml";
+                case ".ico": return "image/x-icon";
+                default: return null;
+            }
+        }
+
         private async void AddTabToJs(string id, string fileName, string content, string filePath, bool isReadOnly = false, string baseUrl = null)
         {
             if (_isWebView2Ready)
@@ -1823,8 +1926,10 @@ namespace ClarionMarkdownEditor
                     string filePathArg = filePath != null ? "\"" + EscapeJsString(filePath) + "\"" : "null";
                     string readOnlyArg = isReadOnly ? "true" : "false";
                     string baseUrlArg = !string.IsNullOrEmpty(baseUrl) ? "\"" + EscapeJsString(baseUrl) + "\"" : "null";
+                    string imageBase = string.IsNullOrEmpty(baseUrl) ? GetLocalImageBase(filePath) : null;
+                    string imageBaseArg = imageBase != null ? "\"" + EscapeJsString(imageBase) + "\"" : "null";
 
-                    var script = $"addTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedContent}\", {filePathArg}, {readOnlyArg}, {baseUrlArg})";
+                    var script = $"addTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedContent}\", {filePathArg}, {readOnlyArg}, {baseUrlArg}, {imageBaseArg})";
 
                     await webView.ExecuteScriptAsync(script);
                 }
@@ -1885,8 +1990,11 @@ namespace ClarionMarkdownEditor
                     string escapedId = EscapeJsString(tabId);
                     string escapedFileName = EscapeJsString(fileName);
                     string escapedFilePath = EscapeJsString(filePath);
-                    string readOnlyArg = isReadOnly.HasValue ? (isReadOnly.Value ? ", true" : ", false") : string.Empty;
-                    await webView.ExecuteScriptAsync($"updateTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedFilePath}\"{readOnlyArg})");
+                    string readOnlyArg = isReadOnly.HasValue ? (isReadOnly.Value ? "true" : "false") : "undefined";
+                    // After Save As the file may be in another folder: its relative images follow it.
+                    string imageBase = GetLocalImageBase(filePath);
+                    string imageBaseArg = imageBase != null ? "\"" + EscapeJsString(imageBase) + "\"" : "undefined";
+                    await webView.ExecuteScriptAsync($"updateTab(\"{escapedId}\", \"{escapedFileName}\", \"{escapedFilePath}\", {readOnlyArg}, {imageBaseArg})");
                 }
                 catch (Exception ex)
                 {

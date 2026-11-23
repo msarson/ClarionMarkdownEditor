@@ -79,7 +79,7 @@
         }
 
         // Add a new tab or switch to existing one with same file path
-        function addTab(tabId, fileName, content, filePath, isReadOnly, baseUrl) {
+        function addTab(tabId, fileName, content, filePath, isReadOnly, baseUrl, imageBase) {
             // Check if a tab with this file path already exists
             var existingTabId = findTabByFilePath(filePath);
             if (existingTabId) {
@@ -104,6 +104,9 @@
                 fileName: fileName || 'Untitled',
                 isReadOnly: readOnly,
                 baseUrl: baseUrl || '',
+                // For a file on disk: the URL C# serves its folder's images
+                // under, so relative images show in the preview (see updatePreview).
+                imageBase: imageBase || '',
                 // URL/read-only tabs always open expanded (they're for reading);
                 // file tabs follow the remembered Expand/Split preference.
                 isFullscreen: readOnly || defaultExpanded
@@ -620,10 +623,16 @@
 
         // Update tab file info (e.g., after Save As). When isReadOnly is passed
         // (true/false), also update the tab's read-only state and visual badge.
-        function updateTabInfo(tabId, fileName, filePath, isReadOnly) {
+        // When imageBase is passed (Save As to another folder), relative images
+        // are resolved against the new folder from now on.
+        function updateTabInfo(tabId, fileName, filePath, isReadOnly, imageBase) {
             if (!tabs[tabId]) return;
             tabs[tabId].fileName = fileName;
             tabs[tabId].filePath = filePath;
+            if (typeof imageBase === 'string' && imageBase !== tabs[tabId].imageBase) {
+                tabs[tabId].imageBase = imageBase;
+                if (tabId === activeTabId) updatePreview();
+            }
 
             var tabEl = tabBar.querySelector('[data-tab-id="' + tabId + '"]');
             if (tabEl) {
@@ -1178,6 +1187,34 @@
             }
         }
 
+        // Points relative <img src> of a file on disk at imageBase
+        // ("https://md-local-images.example/<token>/"), where C# serves the
+        // images of that file's folder. The page itself is served from
+        // https://app.local/ (the add-in's Resources folder), so without this
+        // "images/x.png" is looked up there. A path that climbs above the file's
+        // folder ("../x.png") is left as it is: only that folder is served.
+        function rewriteLocalImages(root, imageBase) {
+            if (!imageBase || !root) return;
+            var imgs = root.querySelectorAll('img');
+            for (var i = 0; i < imgs.length; i++) {
+                var src = imgs[i].getAttribute('src');
+                if (!src || isAbsoluteUrl(src) || src.charAt(0) === '/' || src.charAt(0) === '\\') continue;
+                var rel = localImagePath(src);
+                if (rel !== null) imgs[i].setAttribute('src', imageBase + rel);
+            }
+        }
+
+        // The image path relative to the file's folder, URL-encoded, or null
+        // when it climbs above that folder. Resolved against a sentinel root so
+        // "a/../b.png" is normalised and an escape is detected.
+        function localImagePath(src) {
+            var root = 'https://local.invalid/root/';
+            var u;
+            try { u = new URL(src.replace(/\\/g, '/'), root); } catch (e) { return null; }
+            if (u.href.indexOf(root) !== 0) return null;
+            return u.href.substring(root.length);
+        }
+
         function updatePreview() {
             var currentGeneration = ++renderGeneration;
             var text = editor.value;
@@ -1188,6 +1225,10 @@
             var activeTab = activeTabId ? tabs[activeTabId] : null;
             if (activeTab && activeTab.baseUrl) {
                 rewriteRelativeUrls(preview, activeTab.baseUrl);
+            } else if (activeTab && activeTab.imageBase) {
+                // A file on disk: only images are rewritten. Relative .md links
+                // keep their own open-the-file handling.
+                rewriteLocalImages(preview, activeTab.imageBase);
             }
 
             // Apply syntax highlighting to all code blocks
